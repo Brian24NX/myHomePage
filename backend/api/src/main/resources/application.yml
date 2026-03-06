@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: brian-website-api
+
+  # Use H2 for local dev, switch to PostgreSQL for production
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:prod}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: 8080
+
+# JWT Configuration
+app:
+  jwt:
+    secret: ${JWT_SECRET:myDefaultDevSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm}
+    expiration-ms: 86400000  # 24 hours
+
+  # Admin credentials (change in production)
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD:admin123}
+
+  # GitHub API
+  github:
+    username: Brian24NX
+    token: ${GITHUB_TOKEN:}
+
+  # Email
+  mail:
+    to: ${CONTACT_EMAIL:nanxiangzhou@gmail.com}
+  resend:
+    api-key: ${RESEND_API_KEY:}
+
+---
+# Dev profile - H2 in-memory database
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:briandb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+
+---
+# Production profile - PostgreSQL
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/briandb}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:brian}
+    password: ${DB_PASSWORD:}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect

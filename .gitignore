@@ -1,0 +1,29 @@
+# Dependencies
+frontend/node_modules/
+backend/api/target/
+
+# Environment
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+backend/api/src/main/resources/application-local.yml
+
+# Build output
+frontend/dist/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+
+# Vercel
+frontend/.vercel/
+
+# CV uploads
+backend/api/cv-uploads/
+
+# Railway
+.railway/
