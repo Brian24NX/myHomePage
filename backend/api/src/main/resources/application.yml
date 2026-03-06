@@ -40,6 +40,9 @@ app:
     username: ${ADMIN_USERNAME:admin}
     password: ${ADMIN_PASSWORD:admin123}
 
+  # Frontend URL (for RSS feed links)
+  frontend-url: ${FRONTEND_URL:https://brianzhou.dev}
+
   # GitHub API
   github:
     username: Brian24NX

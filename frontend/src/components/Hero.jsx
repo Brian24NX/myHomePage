@@ -405,13 +405,13 @@ function Hero() {
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2, duration: 0.5 }}
           >
-            <a href="https://github.com/Brian24NX" target="_blank" rel="noopener noreferrer" className="hero-social-link">
+            <a href="https://github.com/Brian24NX" target="_blank" rel="noopener noreferrer" className="hero-social-link" aria-label="GitHub profile">
               <FiGithub />
             </a>
-            <a href="https://www.linkedin.com/in/brian-zhou-b869251a8/" target="_blank" rel="noopener noreferrer" className="hero-social-link">
+            <a href="https://www.linkedin.com/in/brian-zhou-b869251a8/" target="_blank" rel="noopener noreferrer" className="hero-social-link" aria-label="LinkedIn profile">
               <FiLinkedin />
             </a>
-            <a href="mailto:nanxiangzhou@gmail.com" className="hero-social-link">
+            <a href="mailto:nanxiangzhou@gmail.com" className="hero-social-link" aria-label="Send email">
               <FiMail />
             </a>
           </motion.div>

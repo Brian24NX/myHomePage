@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiStar, FiGitBranch, FiExternalLink } from 'react-icons/fi'
 import { api } from '../api/client'
+import { ProjectsSkeleton } from './Skeleton'
 
 const langColors = {
   JavaScript: '#f1e05a',
@@ -78,7 +79,7 @@ function Projects() {
       )}
 
       {loading ? (
-        <div className="loading">Loading projects from GitHub...</div>
+        <ProjectsSkeleton />
       ) : (
         <div className="projects-grid">
           <AnimatePresence mode="popLayout">

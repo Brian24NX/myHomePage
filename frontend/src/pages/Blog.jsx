@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { Helmet } from 'react-helmet-async'
 import { api } from '../api/client'
+import { BlogSkeleton } from '../components/Skeleton'
 
 function Blog() {
   const [posts, setPosts] = useState([])
@@ -16,6 +18,10 @@ function Blog() {
 
   return (
     <div className="page">
+      <Helmet>
+        <title>Blog | Brian Zhou</title>
+        <meta name="description" content="Thoughts on code, tech, and everything in between by Brian Zhou." />
+      </Helmet>
       <div className="section">
         <motion.h1
           className="page-title"
@@ -27,7 +33,7 @@ function Blog() {
         <p className="page-subtitle">Thoughts on code, tech, and everything in between.</p>
 
         {loading ? (
-          <div className="loading">Loading posts...</div>
+          <BlogSkeleton />
         ) : posts.length === 0 ? (
           <div className="empty-state">
             <p>No posts yet. Stay tuned!</p>

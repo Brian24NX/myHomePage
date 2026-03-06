@@ -7,6 +7,7 @@ import {
 import { FiStar, FiGitBranch, FiUsers, FiCode, FiBox } from 'react-icons/fi'
 import { api } from '../api/client'
 import AnimatedCounter from './AnimatedCounter'
+import { AnalyticsSkeleton } from './Skeleton'
 
 const COLORS = ['#ff6b9d', '#c44dff', '#4d9fff', '#4dffb8', '#ffd84d', '#ff8c4d', '#61dafb', '#3178c6']
 
@@ -21,7 +22,7 @@ function GitHubAnalytics() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <section className="section"><div className="loading">Loading analytics...</div></section>
+  if (loading) return <AnalyticsSkeleton />
   if (!stats) return null
 
   const statCards = [

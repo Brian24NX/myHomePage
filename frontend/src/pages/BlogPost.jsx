@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { Helmet } from 'react-helmet-async'
 import ReactMarkdown from 'react-markdown'
 import { api } from '../api/client'
 
@@ -21,6 +22,13 @@ function BlogPost() {
 
   return (
     <div className="page">
+      <Helmet>
+        <title>{post.title} | Brian Zhou</title>
+        <meta name="description" content={post.summary || post.title} />
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.summary || post.title} />
+        <meta property="og:type" content="article" />
+      </Helmet>
       <motion.article
         className="blog-post section"
         initial={{ opacity: 0, y: 20 }}
