@@ -26,14 +26,15 @@ public class GitHubService {
 
     public List<GitHubRepo> getPublicRepos() {
         try {
-            JsonNode repos = fetchGitHub("/users/" + githubUsername + "/repos?sort=updated&per_page=30&type=public");
             List<GitHubRepo> result = new ArrayList<>();
 
-            for (JsonNode repo : repos) {
+            for (JsonNode repo : fetchAllRepos()) {
                 if (repo.has("fork") && repo.get("fork").asBoolean()) continue;
                 result.add(mapRepo(repo));
             }
 
+            // Sort by updated_at descending so newest activity comes first
+            result.sort((a, b) -> b.getUpdatedAt().compareTo(a.getUpdatedAt()));
             return result;
         } catch (Exception e) {
             throw new RuntimeException("Failed to fetch GitHub repos", e);
@@ -42,7 +43,7 @@ public class GitHubService {
 
     public Map<String, Object> getStats() {
         try {
-            JsonNode repos = fetchGitHub("/users/" + githubUsername + "/repos?per_page=100&type=public");
+            List<JsonNode> repos = fetchAllRepos();
             JsonNode user = fetchGitHub("/users/" + githubUsername);
 
             int totalStars = 0;
@@ -114,6 +115,27 @@ public class GitHubService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to fetch GitHub stats", e);
         }
+    }
+
+    private List<JsonNode> fetchAllRepos() throws Exception {
+        List<JsonNode> allRepos = new ArrayList<>();
+        int page = 1;
+
+        while (true) {
+            JsonNode repos = fetchGitHub("/users/" + githubUsername +
+                    "/repos?per_page=100&type=public&page=" + page);
+
+            if (!repos.isArray() || repos.size() == 0) break;
+
+            for (JsonNode repo : repos) {
+                allRepos.add(repo);
+            }
+
+            if (repos.size() < 100) break;
+            page++;
+        }
+
+        return allRepos;
     }
 
     private JsonNode fetchGitHub(String path) throws Exception {
