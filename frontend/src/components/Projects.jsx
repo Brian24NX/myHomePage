@@ -20,12 +20,13 @@ const langColors = {
 function Projects() {
   const [repos, setRepos] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [filter, setFilter] = useState('All')
 
   useEffect(() => {
     api.getRepos()
       .then(setRepos)
-      .catch(console.error)
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [])
 
@@ -80,6 +81,25 @@ function Projects() {
 
       {loading ? (
         <ProjectsSkeleton />
+      ) : error ? (
+        <motion.div
+          className="projects-error"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <p>Unable to load projects right now.</p>
+          <button className="filter-btn" onClick={() => {
+            setError(false)
+            setLoading(true)
+            api.getRepos()
+              .then(setRepos)
+              .catch(() => setError(true))
+              .finally(() => setLoading(false))
+          }}>
+            Try Again
+          </button>
+        </motion.div>
       ) : (
         <div className="projects-grid">
           <AnimatePresence mode="popLayout">

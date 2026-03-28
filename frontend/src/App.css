@@ -637,6 +637,17 @@
 }
 
 /* Projects */
+.projects-error {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-secondary, #999);
+}
+
+.projects-error p {
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
 .projects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));

@@ -14,16 +14,17 @@ const COLORS = ['#ff6b9d', '#c44dff', '#4d9fff', '#4dffb8', '#ffd84d', '#ff8c4d'
 function GitHubAnalytics() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     api.getGitHubStats()
       .then(setStats)
-      .catch(console.error)
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [])
 
   if (loading) return <AnalyticsSkeleton />
-  if (!stats) return null
+  if (error || !stats) return null
 
   const statCards = [
     { icon: <FiBox />, label: 'Repositories', value: stats.totalRepos },

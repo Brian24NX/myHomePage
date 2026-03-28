@@ -22,7 +22,9 @@ public class CorsConfig {
 
         List<String> origins = new ArrayList<>(List.of(
             "http://localhost:5173",
-            "https://my-site-sable-one.vercel.app"
+            "https://my-site-sable-one.vercel.app",
+            "https://brianzhou.dev",
+            "https://www.brianzhou.dev"
         ));
 
         if (extraOrigins != null && !extraOrigins.isEmpty()) {
