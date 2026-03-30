@@ -4,6 +4,9 @@ import com.brian.website.dto.GitHubRepo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -11,9 +14,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.*;
+import java.util.logging.Logger;
 
 @Service
 public class GitHubService {
+
+    private static final Logger log = Logger.getLogger(GitHubService.class.getName());
 
     @Value("${app.github.username}")
     private String githubUsername;
@@ -24,6 +30,7 @@ public class GitHubService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
+    @Cacheable("github-repos")
     public List<GitHubRepo> getPublicRepos() {
         try {
             List<GitHubRepo> result = new ArrayList<>();
@@ -41,6 +48,7 @@ public class GitHubService {
         }
     }
 
+    @Cacheable("github-stats")
     public Map<String, Object> getStats() {
         try {
             List<JsonNode> repos = fetchAllRepos();
@@ -115,6 +123,15 @@ public class GitHubService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to fetch GitHub stats", e);
         }
+    }
+
+    /**
+     * Evict all GitHub caches every 10 minutes so data stays reasonably fresh.
+     */
+    @Scheduled(fixedRate = 600_000)
+    @CacheEvict(value = {"github-repos", "github-stats"}, allEntries = true)
+    public void refreshCache() {
+        log.info("Cleared GitHub caches — next request will fetch fresh data");
     }
 
     private List<JsonNode> fetchAllRepos() throws Exception {
