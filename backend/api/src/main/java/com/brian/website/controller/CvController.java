@@ -33,9 +33,8 @@ public class CvController {
         }
 
         try {
-            // Always use id=1 so there's only one CV row
-            CvDocument doc = cvRepo.findById(1L).orElse(new CvDocument());
-            doc.setId(1L);
+            // Keep only one CV row — reuse existing or create new
+            CvDocument doc = cvRepo.findAll().stream().findFirst().orElse(new CvDocument());
             doc.setFileName(file.getOriginalFilename());
             doc.setFileSize(file.getSize());
             doc.setData(file.getBytes());
@@ -53,7 +52,7 @@ public class CvController {
 
     @GetMapping("/cv/download")
     public ResponseEntity<?> downloadCv() {
-        return cvRepo.findById(1L)
+        return cvRepo.findAll().stream().findFirst()
             .map(doc -> ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"Brian_Zhou_CV.pdf\"")
@@ -63,7 +62,7 @@ public class CvController {
 
     @GetMapping("/cv/info")
     public ResponseEntity<?> getCvInfo() {
-        return cvRepo.findById(1L)
+        return cvRepo.findAll().stream().findFirst()
             .map(doc -> ResponseEntity.ok(Map.of(
                 "exists", true,
                 "size", doc.getFileSize(),

@@ -19,7 +19,6 @@ public class CvDocument {
     @Column(nullable = false)
     private long fileSize;
 
-    @Lob
     @Column(nullable = false, columnDefinition = "bytea")
     private byte[] data;
 
