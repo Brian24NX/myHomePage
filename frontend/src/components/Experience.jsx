@@ -6,7 +6,7 @@ const experiences = [
     type: 'education',
     title: 'Master of Information Systems Management',
     org: 'Washington University in St. Louis',
-    period: '2025 - Present',
+    period: 'Sep 2025 - Present',
     description: 'Pursuing graduate studies in information systems management at WashU.',
     skills: ['Information Systems', 'Data Analytics', 'Software Engineering'],
   },
