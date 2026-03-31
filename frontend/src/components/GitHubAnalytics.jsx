@@ -17,7 +17,7 @@ function GitHubAnalytics() {
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    api.getGitHubStats()
+    api.getGitHubStats((freshData) => setStats(freshData))
       .then(setStats)
       .catch(() => setError(true))
       .finally(() => setLoading(false))

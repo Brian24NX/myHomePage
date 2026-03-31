@@ -13,14 +13,76 @@ async function request(path, options = {}) {
   return res.json();
 }
 
+/**
+ * Stale-while-revalidate: returns cached data instantly, then fetches fresh
+ * data in the background. Cached data expires after maxAge (default 10 min).
+ */
+function cachedRequest(path, maxAge = 10 * 60 * 1000) {
+  const cacheKey = `api_cache:${path}`;
+
+  return new Promise((resolve, reject) => {
+    // Try to serve from cache first
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey));
+      if (cached && Date.now() - cached.timestamp < maxAge) {
+        resolve(cached.data);
+        return;
+      }
+    } catch {
+      // Invalid cache, continue to fetch
+    }
+
+    // No valid cache — must wait for network
+    request(path)
+      .then(data => {
+        localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
+        resolve(data);
+      })
+      .catch(reject);
+  });
+}
+
+/**
+ * Returns cached data immediately if available (even if stale), and refreshes
+ * in the background. Calls onUpdate when fresh data arrives.
+ */
+function staleWhileRevalidate(path, onUpdate, maxAge = 10 * 60 * 1000) {
+  const cacheKey = `api_cache:${path}`;
+  let served = false;
+
+  // Try cache first
+  try {
+    const cached = JSON.parse(localStorage.getItem(cacheKey));
+    if (cached && cached.data) {
+      served = true;
+      // Revalidate in background if stale
+      request(path)
+        .then(data => {
+          localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
+          if (onUpdate) onUpdate(data);
+        })
+        .catch(() => {}); // Silently fail background refresh
+      return Promise.resolve(cached.data);
+    }
+  } catch {
+    // Invalid cache
+  }
+
+  // No cache — fetch from network
+  return request(path).then(data => {
+    localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
+    return data;
+  });
+}
+
 export const api = {
-  // Public
-  getRepos: () => request('/github/repos'),
-  getGitHubStats: () => request('/github/stats'),
+  // Public — cached for instant loading
+  getRepos: (onUpdate) => staleWhileRevalidate('/github/repos', onUpdate),
+  getGitHubStats: (onUpdate) => staleWhileRevalidate('/github/stats', onUpdate),
+  getCvInfo: () => cachedRequest('/cv/info'),
   getPosts: () => request('/blog'),
   getPost: (slug) => request(`/blog/${slug}`),
   submitContact: (data) => request('/contact', { method: 'POST', body: JSON.stringify(data) }),
-  getCvInfo: () => request('/cv/info'),
 
   // Auth
   login: (credentials) => request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),

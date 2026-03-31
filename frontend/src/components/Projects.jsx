@@ -24,7 +24,7 @@ function Projects() {
   const [filter, setFilter] = useState('All')
 
   useEffect(() => {
-    api.getRepos()
+    api.getRepos((freshData) => setRepos(freshData))
       .then(setRepos)
       .catch(() => setError(true))
       .finally(() => setLoading(false))
