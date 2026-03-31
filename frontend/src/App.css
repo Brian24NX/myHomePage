@@ -605,10 +605,62 @@
 
 .about-content {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: auto 1fr;
   gap: 60px;
-  align-items: center;
+  align-items: start;
   margin-top: 3rem;
+}
+
+.about-right {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.about-photo-wrapper {
+  position: sticky;
+  top: 120px;
+}
+
+.about-photo-frame {
+  position: relative;
+  width: 280px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.about-photo-frame::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 22px;
+  background: conic-gradient(from 0deg, #c44dff, #4d9fff, #4dffb8, #c44dff);
+  z-index: -1;
+  animation: photoFrameSpin 6s linear infinite;
+}
+
+@keyframes photoFrameSpin {
+  to { transform: rotate(360deg); }
+}
+
+.about-photo-glow {
+  position: absolute;
+  inset: -40px;
+  background: radial-gradient(circle, rgba(196, 77, 255, 0.2) 0%, transparent 70%);
+  z-index: -2;
+  filter: blur(20px);
+}
+
+.about-photo {
+  width: 100%;
+  display: block;
+  border-radius: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.4s ease;
+}
+
+.about-photo-frame:hover .about-photo {
+  transform: scale(1.03);
 }
 
 .about-text p {
@@ -2109,6 +2161,16 @@
   .about-content {
     grid-template-columns: 1fr;
     gap: 40px;
+  }
+
+  .about-photo-wrapper {
+    position: static;
+    display: flex;
+    justify-content: center;
+  }
+
+  .about-photo-frame {
+    width: 220px;
   }
 
   .menu-toggle {

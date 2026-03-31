@@ -67,51 +67,67 @@ function About() {
         </motion.h2>
 
         <div className="about-content">
+          {/* Profile Photo */}
           <motion.div
-            className="about-text"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            className="about-photo-wrapper"
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.6 }}
           >
-            <p>
-              I'm a passionate Software Engineer with a love for crafting clean,
-              efficient, and user-friendly applications. From full-stack web development
-              to machine learning projects, I enjoy solving complex problems and
-              turning ideas into reality through code.
-            </p>
-            <p>
-              With experience across multiple domains including web applications,
-              data analysis, and cloud infrastructure, I bring a versatile skill set
-              to every project I work on.
-            </p>
+            <div className="about-photo-frame">
+              <div className="about-photo-glow" />
+              <img src="/profile.jpeg" alt="Brian Zhou" className="about-photo" />
+            </div>
           </motion.div>
 
-          {/* Radar Chart */}
-          <motion.div
-            className="about-radar"
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: '-100px' }}
-            transition={{ duration: 0.6 }}
-          >
-            <ResponsiveContainer width="100%" height={300}>
-              <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
-                <PolarGrid stroke="rgba(255,255,255,0.1)" />
-                <PolarAngleAxis
-                  dataKey="skill"
-                  tick={{ fill: '#a0a0b8', fontSize: 13 }}
-                />
-                <Radar
-                  dataKey="level"
-                  stroke="#c44dff"
-                  fill="#c44dff"
-                  fillOpacity={0.15}
-                  strokeWidth={2}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </motion.div>
+          <div className="about-right">
+            <motion.div
+              className="about-text"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              transition={{ duration: 0.6 }}
+            >
+              <p>
+                I'm a passionate Software Engineer with a love for crafting clean,
+                efficient, and user-friendly applications. From full-stack web development
+                to machine learning projects, I enjoy solving complex problems and
+                turning ideas into reality through code.
+              </p>
+              <p>
+                With experience across multiple domains including web applications,
+                data analysis, and cloud infrastructure, I bring a versatile skill set
+                to every project I work on.
+              </p>
+            </motion.div>
+
+            {/* Radar Chart */}
+            <motion.div
+              className="about-radar"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: '-100px' }}
+              transition={{ duration: 0.6 }}
+            >
+              <ResponsiveContainer width="100%" height={300}>
+                <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
+                  <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                  <PolarAngleAxis
+                    dataKey="skill"
+                    tick={{ fill: '#a0a0b8', fontSize: 13 }}
+                  />
+                  <Radar
+                    dataKey="level"
+                    stroke="#c44dff"
+                    fill="#c44dff"
+                    fillOpacity={0.15}
+                    strokeWidth={2}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </motion.div>
+          </div>
         </div>
 
         {/* Skill Categories Grid */}
