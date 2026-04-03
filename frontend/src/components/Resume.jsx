@@ -9,6 +9,18 @@ function Resume() {
   const [cvInfo, setCvInfo] = useState(null)
   const [hovering, setHovering] = useState(false)
 
+  const handleDownload = async (e) => {
+    e.preventDefault()
+    const res = await fetch(`${API_BASE}/cv/download`)
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'Brian_Zhou_CV.pdf'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   useEffect(() => {
     api.getCvInfo().then(setCvInfo).catch(() => setCvInfo({ exists: false }))
   }, [])
@@ -161,7 +173,7 @@ function Resume() {
               <>
                 <a
                   href={`${API_BASE}/cv/download`}
-                  download="Brian_Zhou_CV.pdf"
+                  onClick={handleDownload}
                   className="resume-btn resume-btn-primary"
                 >
                   <FiDownload />
