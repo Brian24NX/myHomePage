@@ -161,8 +161,7 @@ function Resume() {
               <>
                 <a
                   href={`${API_BASE}/cv/download`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  download="Brian_Zhou_CV.pdf"
                   className="resume-btn resume-btn-primary"
                 >
                   <FiDownload />
