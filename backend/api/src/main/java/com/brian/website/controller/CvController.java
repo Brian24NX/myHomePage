@@ -34,7 +34,7 @@ public class CvController {
 
         try {
             // Keep only one CV row — reuse existing or create new
-            CvDocument doc = cvRepo.findAll().stream().findFirst().orElse(new CvDocument());
+            CvDocument doc = cvRepo.findFirstByOrderByIdAsc().orElse(new CvDocument());
             doc.setFileName(file.getOriginalFilename());
             doc.setFileSize(file.getSize());
             doc.setData(file.getBytes());
@@ -52,7 +52,7 @@ public class CvController {
 
     @GetMapping("/cv/download")
     public ResponseEntity<?> downloadCv() {
-        return cvRepo.findAll().stream().findFirst()
+        return cvRepo.findFirstByOrderByIdAsc()
             .map(doc -> ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"Brian_Zhou_CV.pdf\"")
@@ -62,11 +62,11 @@ public class CvController {
 
     @GetMapping("/cv/info")
     public ResponseEntity<?> getCvInfo() {
-        return cvRepo.findAll().stream().findFirst()
-            .map(doc -> ResponseEntity.ok(Map.of(
+        return cvRepo.findFirstMetadata()
+            .map(meta -> ResponseEntity.ok(Map.of(
                 "exists", true,
-                "size", doc.getFileSize(),
-                "lastModified", doc.getUpdatedAt().toInstant(ZoneOffset.UTC).toEpochMilli(),
+                "size", meta.getFileSize(),
+                "lastModified", meta.getUpdatedAt().toInstant(ZoneOffset.UTC).toEpochMilli(),
                 "fileName", "Brian_Zhou_CV.pdf"
             )))
             .orElse(ResponseEntity.ok(Map.of("exists", false)));
