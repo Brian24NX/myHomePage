@@ -51,11 +51,12 @@ public class CvController {
     }
 
     @GetMapping("/cv/download")
-    public ResponseEntity<?> downloadCv() {
+    public ResponseEntity<?> downloadCv(@RequestParam(defaultValue = "false") boolean view) {
+        String disposition = view ? "inline" : "attachment";
         return cvRepo.findFirstByOrderByIdAsc()
             .map(doc -> ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"Brian_Zhou_CV.pdf\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition + "; filename=\"Brian_Zhou_CV.pdf\"")
                 .body(doc.getData()))
             .orElse(ResponseEntity.notFound().build());
     }

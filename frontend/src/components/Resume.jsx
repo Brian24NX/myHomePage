@@ -169,7 +169,7 @@ function Resume() {
                   <span>Download CV</span>
                 </a>
                 <a
-                  href={`${API_BASE}/cv/download`}
+                  href={`${API_BASE}/cv/download?view=true`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="resume-btn resume-btn-outline"
