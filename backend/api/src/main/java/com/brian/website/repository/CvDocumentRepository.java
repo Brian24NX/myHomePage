@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface CvDocumentRepository extends JpaRepository<CvDocument, Long> {
 
     /** Fetch only metadata — never touches the heavy `data` blob column. */
-    @Query("SELECT c.id AS id, c.fileName AS fileName, c.fileSize AS fileSize, c.updatedAt AS updatedAt FROM CvDocument c ORDER BY c.id ASC LIMIT 1")
+    @Query(value = "SELECT file_name AS fileName, file_size AS fileSize, updated_at AS updatedAt FROM cv_documents ORDER BY id ASC LIMIT 1", nativeQuery = true)
     Optional<CvMetadata> findFirstMetadata();
 
     /** Fetch the full entity (including PDF bytes) — use only for download. */
