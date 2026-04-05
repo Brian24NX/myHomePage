@@ -79,7 +79,7 @@ export const api = {
   // Public — cached for instant loading
   getRepos: (onUpdate) => staleWhileRevalidate('/github/repos', onUpdate),
   getGitHubStats: (onUpdate) => staleWhileRevalidate('/github/stats', onUpdate),
-  getCvInfo: () => cachedRequest('/cv/info'),
+  getCvInfo: (onUpdate) => staleWhileRevalidate('/cv/info', onUpdate, 24 * 60 * 60 * 1000),
   getPosts: () => request('/blog'),
   getPost: (slug) => request(`/blog/${slug}`),
   submitContact: (data) => request('/contact', { method: 'POST', body: JSON.stringify(data) }),

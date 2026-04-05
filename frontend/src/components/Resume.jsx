@@ -7,6 +7,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
 function Resume() {
   const [cvInfo, setCvInfo] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [hovering, setHovering] = useState(false)
 
   const handleDownload = async (e) => {
@@ -22,7 +23,9 @@ function Resume() {
   }
 
   useEffect(() => {
-    api.getCvInfo().then(setCvInfo).catch(() => setCvInfo({ exists: false }))
+    api.getCvInfo((freshData) => setCvInfo(freshData))
+      .then((data) => { setCvInfo(data); setLoading(false) })
+      .catch(() => { setCvInfo({ exists: false }); setLoading(false) })
   }, [])
 
   const formatSize = (bytes) => {
@@ -141,6 +144,19 @@ function Resume() {
           </p>
 
           {/* File metadata */}
+          {loading && !cvInfo?.exists && (
+            <div className="resume-meta">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="resume-meta-item">
+                  <div className="resume-meta-skeleton-icon" />
+                  <div>
+                    <div className="resume-meta-skeleton-label" />
+                    <div className="resume-meta-skeleton-value" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {cvInfo?.exists && (
             <div className="resume-meta">
               <div className="resume-meta-item">
@@ -189,6 +205,11 @@ function Resume() {
                   <span>View Online</span>
                 </a>
               </>
+            ) : loading ? (
+              <div className="resume-loading">
+                <div className="resume-btn-skeleton" />
+                <div className="resume-btn-skeleton resume-btn-skeleton-outline" />
+              </div>
             ) : (
               <div className="resume-coming-soon">
                 <span className="resume-soon-badge">Coming Soon</span>

@@ -1696,6 +1696,58 @@
   font-size: 0.9rem;
 }
 
+/* Resume skeleton loading */
+@keyframes resume-shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+
+.resume-loading {
+  display: flex;
+  gap: 12px;
+}
+
+.resume-btn-skeleton {
+  width: 160px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(196, 77, 255, 0.08) 25%, rgba(196, 77, 255, 0.15) 50%, rgba(196, 77, 255, 0.08) 75%);
+  background-size: 400px 100%;
+  animation: resume-shimmer 1.5s infinite ease-in-out;
+}
+
+.resume-btn-skeleton-outline {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 75%);
+  background-size: 400px 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.resume-meta-skeleton-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  animation: resume-shimmer 1.5s infinite ease-in-out;
+  background-size: 400px 100%;
+}
+
+.resume-meta-skeleton-label {
+  width: 40px;
+  height: 10px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  margin-bottom: 4px;
+}
+
+.resume-meta-skeleton-value {
+  width: 60px;
+  height: 13px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  animation: resume-shimmer 1.5s infinite ease-in-out;
+  background-size: 400px 100%;
+}
+
 .resume-highlights {
   display: flex;
   gap: 10px;
