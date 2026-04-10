@@ -1,43 +1,44 @@
 import { useEffect, useRef } from 'react'
 
 const COLORS = ['#ff6b9d', '#c44dff', '#4d9fff', '#4dffb8', '#ffd84d']
-const MAX_PARTICLES = 80
+const MAX_PARTICLES = 60
 const MAX_RINGS = 5
 
 export default function CyberCursor() {
+  const crosshairRef = useRef(null)
+  const bracketRef = useRef(null)
   const canvasRef = useRef(null)
 
   useEffect(() => {
-    // Detect touch device
     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return
 
+    const crosshair = crosshairRef.current
+    const bracket = bracketRef.current
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!crosshair || !bracket || !canvas) return
     const ctx = canvas.getContext('2d', { alpha: true })
 
-    // State — two layers: crosshair snaps instantly, brackets trail slightly
     const mouse = { x: -100, y: -100 }
-    const cursor = { x: -100, y: -100 }
     const trail = { x: -100, y: -100 }
     let particleCount = 0
-    const particlesX = new Float32Array(MAX_PARTICLES)
-    const particlesY = new Float32Array(MAX_PARTICLES)
-    const particlesVX = new Float32Array(MAX_PARTICLES)
-    const particlesVY = new Float32Array(MAX_PARTICLES)
-    const particlesLife = new Float32Array(MAX_PARTICLES)
-    const particlesDecay = new Float32Array(MAX_PARTICLES)
-    const particlesSize = new Float32Array(MAX_PARTICLES)
-    const particlesColor = new Uint8Array(MAX_PARTICLES)
+    const pX = new Float32Array(MAX_PARTICLES)
+    const pY = new Float32Array(MAX_PARTICLES)
+    const pVX = new Float32Array(MAX_PARTICLES)
+    const pVY = new Float32Array(MAX_PARTICLES)
+    const pLife = new Float32Array(MAX_PARTICLES)
+    const pDecay = new Float32Array(MAX_PARTICLES)
+    const pSize = new Float32Array(MAX_PARTICLES)
+    const pColor = new Uint8Array(MAX_PARTICLES)
 
     let ringCount = 0
-    const ringsX = new Float32Array(MAX_RINGS)
-    const ringsY = new Float32Array(MAX_RINGS)
-    const ringsRadius = new Float32Array(MAX_RINGS)
-    const ringsLife = new Float32Array(MAX_RINGS)
+    const rX = new Float32Array(MAX_RINGS)
+    const rY = new Float32Array(MAX_RINGS)
+    const rRadius = new Float32Array(MAX_RINGS)
+    const rLife = new Float32Array(MAX_RINGS)
 
     let frame = 0
     let rafId
-    let spawnAccum = 0
+    let prevX = -100, prevY = -100
 
     const resize = () => {
       canvas.width = window.innerWidth
@@ -57,28 +58,26 @@ export default function CyberCursor() {
       const i = particleCount++
       const angle = Math.random() * Math.PI * 2
       const speed = Math.random() * 1.5 + 0.5
-      particlesX[i] = x
-      particlesY[i] = y
-      particlesVX[i] = Math.cos(angle) * speed
-      particlesVY[i] = Math.sin(angle) * speed
-      particlesLife[i] = 1
-      particlesDecay[i] = Math.random() * 0.025 + 0.02
-      particlesSize[i] = Math.random() * 2.5 + 1
-      particlesColor[i] = Math.floor(Math.random() * COLORS.length)
+      pX[i] = x; pY[i] = y
+      pVX[i] = Math.cos(angle) * speed
+      pVY[i] = Math.sin(angle) * speed
+      pLife[i] = 1
+      pDecay[i] = Math.random() * 0.025 + 0.02
+      pSize[i] = Math.random() * 2.5 + 1
+      pColor[i] = Math.floor(Math.random() * COLORS.length)
     }
 
     const addRing = (x, y) => {
       if (ringCount >= MAX_RINGS) return
       const i = ringCount++
-      ringsX[i] = x
-      ringsY[i] = y
-      ringsRadius[i] = 5
-      ringsLife[i] = 1
+      rX[i] = x; rY[i] = y; rRadius[i] = 5; rLife[i] = 1
     }
 
+    // DOM crosshair moves instantly via mousemove — no RAF delay
     const onMouseMove = (e) => {
       mouse.x = e.clientX
       mouse.y = e.clientY
+      crosshair.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
     }
 
     const onClick = (e) => {
@@ -89,164 +88,85 @@ export default function CyberCursor() {
     window.addEventListener('mousemove', onMouseMove, { passive: true })
     window.addEventListener('click', onClick, true)
 
-    const draw = () => {
-      rafId = requestAnimationFrame(draw)
+    const loop = () => {
+      rafId = requestAnimationFrame(loop)
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       frame++
 
-      // Crosshair snaps to mouse instantly
-      cursor.x = mouse.x
-      cursor.y = mouse.y
-      // Brackets trail behind for cinematic feel
-      trail.x += (mouse.x - trail.x) * 0.25
-      trail.y += (mouse.y - trail.y) * 0.25
+      // Trailing bracket follows with delay
+      trail.x += (mouse.x - trail.x) * 0.2
+      trail.y += (mouse.y - trail.y) * 0.2
+      bracket.style.transform = `translate(${trail.x}px, ${trail.y}px) rotate(${frame * 0.6}deg)`
 
-      // Spawn particles based on movement distance (not every mousemove)
-      const dx = mouse.x - cursor.x
-      const dy = mouse.y - cursor.y
+      // Spawn particles based on distance moved
+      const dx = mouse.x - prevX
+      const dy = mouse.y - prevY
       const dist = Math.sqrt(dx * dx + dy * dy)
-      spawnAccum += dist * 0.15
-      while (spawnAccum >= 1 && particleCount < MAX_PARTICLES) {
-        addParticle(
-          cursor.x + (Math.random() - 0.5) * 4,
-          cursor.y + (Math.random() - 0.5) * 4
-        )
-        spawnAccum--
-      }
-      spawnAccum = Math.min(spawnAccum, 3)
-
-      // --- Particles (no shadowBlur — use additive style instead) ---
-      let writeIdx = 0
-      for (let i = 0; i < particleCount; i++) {
-        particlesX[i] += particlesVX[i]
-        particlesY[i] += particlesVY[i]
-        particlesLife[i] -= particlesDecay[i]
-        if (particlesLife[i] <= 0) continue
-        // Compact: copy live particle to writeIdx
-        if (writeIdx !== i) {
-          particlesX[writeIdx] = particlesX[i]
-          particlesY[writeIdx] = particlesY[i]
-          particlesVX[writeIdx] = particlesVX[i]
-          particlesVY[writeIdx] = particlesVY[i]
-          particlesLife[writeIdx] = particlesLife[i]
-          particlesDecay[writeIdx] = particlesDecay[i]
-          particlesSize[writeIdx] = particlesSize[i]
-          particlesColor[writeIdx] = particlesColor[i]
+      if (dist > 4) {
+        const count = Math.min(Math.floor(dist / 8), 3)
+        for (let i = 0; i < count; i++) {
+          addParticle(
+            mouse.x + (Math.random() - 0.5) * 4,
+            mouse.y + (Math.random() - 0.5) * 4
+          )
         }
-        const life = particlesLife[writeIdx]
-        const radius = particlesSize[writeIdx] * life
+        prevX = mouse.x
+        prevY = mouse.y
+      }
+
+      // --- Particles ---
+      let w = 0
+      for (let i = 0; i < particleCount; i++) {
+        pX[i] += pVX[i]; pY[i] += pVY[i]
+        pLife[i] -= pDecay[i]
+        if (pLife[i] <= 0) continue
+        if (w !== i) {
+          pX[w]=pX[i]; pY[w]=pY[i]; pVX[w]=pVX[i]; pVY[w]=pVY[i]
+          pLife[w]=pLife[i]; pDecay[w]=pDecay[i]; pSize[w]=pSize[i]; pColor[w]=pColor[i]
+        }
+        const life = pLife[w], rad = pSize[w] * life
         ctx.globalAlpha = life * 0.7
-        ctx.fillStyle = COLORS[particlesColor[writeIdx]]
+        ctx.fillStyle = COLORS[pColor[w]]
         ctx.beginPath()
-        ctx.arc(particlesX[writeIdx], particlesY[writeIdx], radius, 0, Math.PI * 2)
+        ctx.arc(pX[w], pY[w], rad, 0, Math.PI * 2)
         ctx.fill()
-        // Soft glow — just a larger, transparent circle (way cheaper than shadowBlur)
         ctx.globalAlpha = life * 0.15
         ctx.beginPath()
-        ctx.arc(particlesX[writeIdx], particlesY[writeIdx], radius * 3, 0, Math.PI * 2)
+        ctx.arc(pX[w], pY[w], rad * 3, 0, Math.PI * 2)
         ctx.fill()
-        writeIdx++
+        w++
       }
-      particleCount = writeIdx
+      particleCount = w
 
-      // --- Click rings (minimal shadowBlur, only on rings) ---
-      writeIdx = 0
+      // --- Rings ---
+      w = 0
       for (let i = 0; i < ringCount; i++) {
-        ringsRadius[i] += 3.5
-        ringsLife[i] -= 0.03
-        if (ringsLife[i] <= 0) continue
-        if (writeIdx !== i) {
-          ringsX[writeIdx] = ringsX[i]
-          ringsY[writeIdx] = ringsY[i]
-          ringsRadius[writeIdx] = ringsRadius[i]
-          ringsLife[writeIdx] = ringsLife[i]
-        }
-        const life = ringsLife[writeIdx]
+        rRadius[i] += 3.5; rLife[i] -= 0.03
+        if (rLife[i] <= 0) continue
+        if (w !== i) { rX[w]=rX[i]; rY[w]=rY[i]; rRadius[w]=rRadius[i]; rLife[w]=rLife[i] }
+        const life = rLife[w]
         ctx.globalAlpha = life * 0.5
         ctx.strokeStyle = '#c44dff'
         ctx.shadowColor = '#c44dff'
         ctx.shadowBlur = 10
         ctx.lineWidth = 2 * life
         ctx.beginPath()
-        ctx.arc(ringsX[writeIdx], ringsY[writeIdx], ringsRadius[writeIdx], 0, Math.PI * 2)
+        ctx.arc(rX[w], rY[w], rRadius[w], 0, Math.PI * 2)
         ctx.stroke()
         ctx.strokeStyle = '#4d9fff'
         ctx.shadowColor = '#4d9fff'
         ctx.lineWidth = 1 * life
         ctx.beginPath()
-        ctx.arc(ringsX[writeIdx], ringsY[writeIdx], ringsRadius[writeIdx] * 0.6, 0, Math.PI * 2)
+        ctx.arc(rX[w], rY[w], rRadius[w] * 0.6, 0, Math.PI * 2)
         ctx.stroke()
-        writeIdx++
+        w++
       }
-      ringCount = writeIdx
+      ringCount = w
       ctx.shadowBlur = 0
-
-      // --- Crosshair (instant position) ---
-      const size = 18
-      const gap = 6
-      const rot = frame * 0.02
-
-      ctx.save()
-      ctx.translate(cursor.x, cursor.y)
-
-      // Crosshair lines
-      ctx.globalAlpha = 0.85
-      ctx.strokeStyle = '#4d9fff'
-      ctx.lineWidth = 1.5
-      ctx.beginPath()
-      ctx.moveTo(0, -size); ctx.lineTo(0, -gap)
-      ctx.moveTo(0, gap); ctx.lineTo(0, size)
-      ctx.moveTo(-size, 0); ctx.lineTo(-gap, 0)
-      ctx.moveTo(gap, 0); ctx.lineTo(size, 0)
-      ctx.stroke()
-
-      // Center dot with cheap glow
-      ctx.globalAlpha = 1
-      ctx.fillStyle = '#ff6b9d'
-      ctx.beginPath()
-      ctx.arc(0, 0, 2.5, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.globalAlpha = 0.2
-      ctx.beginPath()
-      ctx.arc(0, 0, 8, 0, Math.PI * 2)
-      ctx.fill()
-
-      ctx.restore()
-
-      // --- Outer brackets & arcs (trailing position — cinematic lag) ---
-      ctx.save()
-      ctx.translate(trail.x, trail.y)
-
-      // Outer arcs
-      ctx.globalAlpha = 0.3
-      ctx.strokeStyle = '#c44dff'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.arc(0, 0, size + 4, rot, rot + Math.PI * 1.2)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.arc(0, 0, size + 4, rot + Math.PI, rot + Math.PI * 2.2)
-      ctx.stroke()
-
-      // Corner brackets
-      ctx.globalAlpha = 0.5
-      ctx.strokeStyle = '#4dffb8'
-      ctx.lineWidth = 1
-      const b = 6
-      const o = size - 2
-      ctx.rotate(rot * 0.5)
-      ctx.beginPath()
-      ctx.moveTo(-o, -o + b); ctx.lineTo(-o, -o); ctx.lineTo(-o + b, -o)
-      ctx.moveTo(o - b, -o); ctx.lineTo(o, -o); ctx.lineTo(o, -o + b)
-      ctx.moveTo(-o, o - b); ctx.lineTo(-o, o); ctx.lineTo(-o + b, o)
-      ctx.moveTo(o - b, o); ctx.lineTo(o, o); ctx.lineTo(o, o - b)
-      ctx.stroke()
-
-      ctx.restore()
       ctx.globalAlpha = 1
     }
 
-    draw()
+    loop()
 
     return () => {
       window.removeEventListener('resize', resize)
@@ -263,17 +183,68 @@ export default function CyberCursor() {
   }
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        pointerEvents: 'none',
-        zIndex: 99999,
-      }}
-    />
+    <>
+      {/* DOM crosshair — GPU composited, moves at native speed */}
+      <div
+        ref={crosshairRef}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          pointerEvents: 'none',
+          zIndex: 100000,
+          willChange: 'transform',
+        }}
+      >
+        <svg width="40" height="40" viewBox="-20 -20 40 40" style={{ display: 'block', margin: '-20px 0 0 -20px', filter: 'drop-shadow(0 0 4px rgba(77,159,255,0.6))' }}>
+          {/* Crosshair lines */}
+          <line x1="0" y1="-18" x2="0" y2="-6" stroke="#4d9fff" strokeWidth="1.5" opacity="0.85" />
+          <line x1="0" y1="6" x2="0" y2="18" stroke="#4d9fff" strokeWidth="1.5" opacity="0.85" />
+          <line x1="-18" y1="0" x2="-6" y2="0" stroke="#4d9fff" strokeWidth="1.5" opacity="0.85" />
+          <line x1="6" y1="0" x2="18" y2="0" stroke="#4d9fff" strokeWidth="1.5" opacity="0.85" />
+          {/* Center dot */}
+          <circle cx="0" cy="0" r="2.5" fill="#ff6b9d" />
+          <circle cx="0" cy="0" r="6" fill="#ff6b9d" opacity="0.15" />
+        </svg>
+      </div>
+
+      {/* Trailing brackets — follows with delay */}
+      <div
+        ref={bracketRef}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          pointerEvents: 'none',
+          zIndex: 99999,
+          willChange: 'transform',
+        }}
+      >
+        <svg width="48" height="48" viewBox="-24 -24 48 48" style={{ display: 'block', margin: '-24px 0 0 -24px', filter: 'drop-shadow(0 0 3px rgba(77,255,184,0.4))' }}>
+          {/* Outer arcs */}
+          <path d="M 0,-22 A 22,22 0 0,1 19.05,-11" fill="none" stroke="#c44dff" strokeWidth="1" opacity="0.3" />
+          <path d="M 0,22 A 22,22 0 0,1 -19.05,11" fill="none" stroke="#c44dff" strokeWidth="1" opacity="0.3" />
+          {/* Corner brackets */}
+          <polyline points="-16,-10 -16,-16 -10,-16" fill="none" stroke="#4dffb8" strokeWidth="1" opacity="0.5" />
+          <polyline points="10,-16 16,-16 16,-10" fill="none" stroke="#4dffb8" strokeWidth="1" opacity="0.5" />
+          <polyline points="-16,10 -16,16 -10,16" fill="none" stroke="#4dffb8" strokeWidth="1" opacity="0.5" />
+          <polyline points="10,16 16,16 16,10" fill="none" stroke="#4dffb8" strokeWidth="1" opacity="0.5" />
+        </svg>
+      </div>
+
+      {/* Canvas only for particles & click rings */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          pointerEvents: 'none',
+          zIndex: 99998,
+        }}
+      />
+    </>
   )
 }
