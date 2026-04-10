@@ -11,6 +11,7 @@ import Navbar from './components/Navbar'
 import ScrollProgress from './components/ScrollProgress'
 import ScrollToTop from './components/ScrollToTop'
 import CyberCursor from './components/CyberCursor'
+import CyberOverlay from './components/CyberOverlay'
 import './App.css'
 
 const Blog = lazy(() => import('./pages/Blog'))
@@ -40,6 +41,7 @@ function App() {
   return (
     <div className="app">
       <CyberCursor />
+      <CyberOverlay />
       <a href="#main-content" className="skip-link">Skip to content</a>
       <ScrollToTop />
       <ScrollProgress />
