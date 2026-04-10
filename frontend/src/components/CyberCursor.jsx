@@ -1,44 +1,42 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
+
+const COLORS = ['#ff6b9d', '#c44dff', '#4d9fff', '#4dffb8', '#ffd84d']
+const MAX_PARTICLES = 80
+const MAX_RINGS = 5
 
 export default function CyberCursor() {
   const canvasRef = useRef(null)
-  const mouse = useRef({ x: -100, y: -100 })
-  const smoothMouse = useRef({ x: -100, y: -100 })
-  const particles = useRef([])
-  const rings = useRef([])
-  const rafId = useRef(null)
-  const isTouchDevice = useRef(false)
-
-  const COLORS = ['#ff6b9d', '#c44dff', '#4d9fff', '#4dffb8', '#ffd84d']
-
-  const spawnParticle = useCallback((x, y) => {
-    const color = COLORS[Math.floor(Math.random() * COLORS.length)]
-    const angle = Math.random() * Math.PI * 2
-    const speed = Math.random() * 1.5 + 0.5
-    particles.current.push({
-      x,
-      y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 1,
-      decay: Math.random() * 0.02 + 0.015,
-      size: Math.random() * 2.5 + 1,
-      color,
-    })
-  }, [])
-
-  const spawnRing = useCallback((x, y) => {
-    rings.current.push({ x, y, radius: 5, life: 1, decay: 0.03 })
-  }, [])
 
   useEffect(() => {
     // Detect touch device
-    isTouchDevice.current = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-    if (isTouchDevice.current) return
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return
 
     const canvas = canvasRef.current
     if (!canvas) return
-    const ctx = canvas.getContext('2d')
+    const ctx = canvas.getContext('2d', { alpha: true })
+
+    // State
+    const mouse = { x: -100, y: -100 }
+    const cursor = { x: -100, y: -100 }
+    let particleCount = 0
+    const particlesX = new Float32Array(MAX_PARTICLES)
+    const particlesY = new Float32Array(MAX_PARTICLES)
+    const particlesVX = new Float32Array(MAX_PARTICLES)
+    const particlesVY = new Float32Array(MAX_PARTICLES)
+    const particlesLife = new Float32Array(MAX_PARTICLES)
+    const particlesDecay = new Float32Array(MAX_PARTICLES)
+    const particlesSize = new Float32Array(MAX_PARTICLES)
+    const particlesColor = new Uint8Array(MAX_PARTICLES)
+
+    let ringCount = 0
+    const ringsX = new Float32Array(MAX_RINGS)
+    const ringsY = new Float32Array(MAX_RINGS)
+    const ringsRadius = new Float32Array(MAX_RINGS)
+    const ringsLife = new Float32Array(MAX_RINGS)
+
+    let frame = 0
+    let rafId
+    let spawnAccum = 0
 
     const resize = () => {
       canvas.width = window.innerWidth
@@ -53,178 +51,187 @@ export default function CyberCursor() {
     styleEl.textContent = '*, *::before, *::after { cursor: none !important; }'
     document.head.appendChild(styleEl)
 
+    const addParticle = (x, y) => {
+      if (particleCount >= MAX_PARTICLES) return
+      const i = particleCount++
+      const angle = Math.random() * Math.PI * 2
+      const speed = Math.random() * 1.5 + 0.5
+      particlesX[i] = x
+      particlesY[i] = y
+      particlesVX[i] = Math.cos(angle) * speed
+      particlesVY[i] = Math.sin(angle) * speed
+      particlesLife[i] = 1
+      particlesDecay[i] = Math.random() * 0.025 + 0.02
+      particlesSize[i] = Math.random() * 2.5 + 1
+      particlesColor[i] = Math.floor(Math.random() * COLORS.length)
+    }
+
+    const addRing = (x, y) => {
+      if (ringCount >= MAX_RINGS) return
+      const i = ringCount++
+      ringsX[i] = x
+      ringsY[i] = y
+      ringsRadius[i] = 5
+      ringsLife[i] = 1
+    }
+
     const onMouseMove = (e) => {
-      mouse.current.x = e.clientX
-      mouse.current.y = e.clientY
-      // Spawn trail particles
-      for (let i = 0; i < 2; i++) {
-        spawnParticle(e.clientX, e.clientY)
-      }
+      mouse.x = e.clientX
+      mouse.y = e.clientY
     }
 
     const onClick = (e) => {
-      spawnRing(e.clientX, e.clientY)
-      for (let i = 0; i < 12; i++) {
-        spawnParticle(e.clientX, e.clientY)
-      }
+      addRing(e.clientX, e.clientY)
+      for (let i = 0; i < 10; i++) addParticle(e.clientX, e.clientY)
     }
 
-    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mousemove', onMouseMove, { passive: true })
     window.addEventListener('click', onClick, true)
 
-    let frame = 0
-
     const draw = () => {
-      rafId.current = requestAnimationFrame(draw)
+      rafId = requestAnimationFrame(draw)
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       frame++
 
-      // Smooth follow
-      smoothMouse.current.x += (mouse.current.x - smoothMouse.current.x) * 0.15
-      smoothMouse.current.y += (mouse.current.y - smoothMouse.current.y) * 0.15
+      // Cursor follows mouse directly — no lag
+      cursor.x += (mouse.x - cursor.x) * 0.45
+      cursor.y += (mouse.y - cursor.y) * 0.45
 
-      const sx = smoothMouse.current.x
-      const sy = smoothMouse.current.y
-
-      // --- Draw particles ---
-      for (let i = particles.current.length - 1; i >= 0; i--) {
-        const p = particles.current[i]
-        p.x += p.vx
-        p.y += p.vy
-        p.life -= p.decay
-        if (p.life <= 0) {
-          particles.current.splice(i, 1)
-          continue
-        }
-        ctx.globalAlpha = p.life * 0.6
-        ctx.fillStyle = p.color
-        ctx.shadowColor = p.color
-        ctx.shadowBlur = 8
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2)
-        ctx.fill()
+      // Spawn particles based on movement distance (not every mousemove)
+      const dx = mouse.x - cursor.x
+      const dy = mouse.y - cursor.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      spawnAccum += dist * 0.15
+      while (spawnAccum >= 1 && particleCount < MAX_PARTICLES) {
+        addParticle(
+          cursor.x + (Math.random() - 0.5) * 4,
+          cursor.y + (Math.random() - 0.5) * 4
+        )
+        spawnAccum--
       }
-      ctx.shadowBlur = 0
+      spawnAccum = Math.min(spawnAccum, 3)
 
-      // --- Draw click rings ---
-      for (let i = rings.current.length - 1; i >= 0; i--) {
-        const r = rings.current[i]
-        r.radius += 3
-        r.life -= r.decay
-        if (r.life <= 0) {
-          rings.current.splice(i, 1)
-          continue
+      // --- Particles (no shadowBlur — use additive style instead) ---
+      let writeIdx = 0
+      for (let i = 0; i < particleCount; i++) {
+        particlesX[i] += particlesVX[i]
+        particlesY[i] += particlesVY[i]
+        particlesLife[i] -= particlesDecay[i]
+        if (particlesLife[i] <= 0) continue
+        // Compact: copy live particle to writeIdx
+        if (writeIdx !== i) {
+          particlesX[writeIdx] = particlesX[i]
+          particlesY[writeIdx] = particlesY[i]
+          particlesVX[writeIdx] = particlesVX[i]
+          particlesVY[writeIdx] = particlesVY[i]
+          particlesLife[writeIdx] = particlesLife[i]
+          particlesDecay[writeIdx] = particlesDecay[i]
+          particlesSize[writeIdx] = particlesSize[i]
+          particlesColor[writeIdx] = particlesColor[i]
         }
-        ctx.globalAlpha = r.life * 0.5
+        const life = particlesLife[writeIdx]
+        const radius = particlesSize[writeIdx] * life
+        ctx.globalAlpha = life * 0.7
+        ctx.fillStyle = COLORS[particlesColor[writeIdx]]
+        ctx.beginPath()
+        ctx.arc(particlesX[writeIdx], particlesY[writeIdx], radius, 0, Math.PI * 2)
+        ctx.fill()
+        // Soft glow — just a larger, transparent circle (way cheaper than shadowBlur)
+        ctx.globalAlpha = life * 0.15
+        ctx.beginPath()
+        ctx.arc(particlesX[writeIdx], particlesY[writeIdx], radius * 3, 0, Math.PI * 2)
+        ctx.fill()
+        writeIdx++
+      }
+      particleCount = writeIdx
+
+      // --- Click rings (minimal shadowBlur, only on rings) ---
+      writeIdx = 0
+      for (let i = 0; i < ringCount; i++) {
+        ringsRadius[i] += 3.5
+        ringsLife[i] -= 0.03
+        if (ringsLife[i] <= 0) continue
+        if (writeIdx !== i) {
+          ringsX[writeIdx] = ringsX[i]
+          ringsY[writeIdx] = ringsY[i]
+          ringsRadius[writeIdx] = ringsRadius[i]
+          ringsLife[writeIdx] = ringsLife[i]
+        }
+        const life = ringsLife[writeIdx]
+        ctx.globalAlpha = life * 0.5
         ctx.strokeStyle = '#c44dff'
         ctx.shadowColor = '#c44dff'
-        ctx.shadowBlur = 15
-        ctx.lineWidth = 2 * r.life
+        ctx.shadowBlur = 10
+        ctx.lineWidth = 2 * life
         ctx.beginPath()
-        ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2)
+        ctx.arc(ringsX[writeIdx], ringsY[writeIdx], ringsRadius[writeIdx], 0, Math.PI * 2)
         ctx.stroke()
-
-        // Inner ring
         ctx.strokeStyle = '#4d9fff'
         ctx.shadowColor = '#4d9fff'
-        ctx.lineWidth = 1 * r.life
+        ctx.lineWidth = 1 * life
         ctx.beginPath()
-        ctx.arc(r.x, r.y, r.radius * 0.6, 0, Math.PI * 2)
+        ctx.arc(ringsX[writeIdx], ringsY[writeIdx], ringsRadius[writeIdx] * 0.6, 0, Math.PI * 2)
         ctx.stroke()
+        writeIdx++
       }
+      ringCount = writeIdx
       ctx.shadowBlur = 0
 
-      // --- Draw crosshair cursor ---
+      // --- Crosshair ---
+      const cx = cursor.x
+      const cy = cursor.y
       const size = 18
       const gap = 6
-      const rotation = frame * 0.02
+      const rot = frame * 0.02
 
       ctx.save()
-      ctx.translate(sx, sy)
+      ctx.translate(cx, cy)
 
-      // Outer rotating ring
+      // Outer arcs
       ctx.globalAlpha = 0.3
       ctx.strokeStyle = '#c44dff'
-      ctx.shadowColor = '#c44dff'
-      ctx.shadowBlur = 12
       ctx.lineWidth = 1
       ctx.beginPath()
-      ctx.arc(0, 0, size + 4, rotation, rotation + Math.PI * 1.2)
+      ctx.arc(0, 0, size + 4, rot, rot + Math.PI * 1.2)
       ctx.stroke()
       ctx.beginPath()
-      ctx.arc(0, 0, size + 4, rotation + Math.PI, rotation + Math.PI * 2.2)
+      ctx.arc(0, 0, size + 4, rot + Math.PI, rot + Math.PI * 2.2)
       ctx.stroke()
 
       // Crosshair lines
-      ctx.globalAlpha = 0.8
+      ctx.globalAlpha = 0.85
       ctx.strokeStyle = '#4d9fff'
-      ctx.shadowColor = '#4d9fff'
-      ctx.shadowBlur = 10
       ctx.lineWidth = 1.5
-
-      // Top
       ctx.beginPath()
-      ctx.moveTo(0, -size)
-      ctx.lineTo(0, -gap)
-      ctx.stroke()
-      // Bottom
-      ctx.beginPath()
-      ctx.moveTo(0, gap)
-      ctx.lineTo(0, size)
-      ctx.stroke()
-      // Left
-      ctx.beginPath()
-      ctx.moveTo(-size, 0)
-      ctx.lineTo(-gap, 0)
-      ctx.stroke()
-      // Right
-      ctx.beginPath()
-      ctx.moveTo(gap, 0)
-      ctx.lineTo(size, 0)
+      ctx.moveTo(0, -size); ctx.lineTo(0, -gap)
+      ctx.moveTo(0, gap); ctx.lineTo(0, size)
+      ctx.moveTo(-size, 0); ctx.lineTo(-gap, 0)
+      ctx.moveTo(gap, 0); ctx.lineTo(size, 0)
       ctx.stroke()
 
-      // Center dot
+      // Center dot with cheap glow
       ctx.globalAlpha = 1
       ctx.fillStyle = '#ff6b9d'
-      ctx.shadowColor = '#ff6b9d'
-      ctx.shadowBlur = 15
       ctx.beginPath()
       ctx.arc(0, 0, 2.5, 0, Math.PI * 2)
       ctx.fill()
+      ctx.globalAlpha = 0.2
+      ctx.beginPath()
+      ctx.arc(0, 0, 8, 0, Math.PI * 2)
+      ctx.fill()
 
-      // Corner brackets (rotating)
+      // Corner brackets
       ctx.globalAlpha = 0.5
       ctx.strokeStyle = '#4dffb8'
-      ctx.shadowColor = '#4dffb8'
-      ctx.shadowBlur = 8
       ctx.lineWidth = 1
-      const bSize = 6
-      const bOffset = size - 2
-
-      ctx.rotate(rotation * 0.5)
-      // Top-left bracket
+      const b = 6
+      const o = size - 2
+      ctx.rotate(rot * 0.5)
       ctx.beginPath()
-      ctx.moveTo(-bOffset, -bOffset + bSize)
-      ctx.lineTo(-bOffset, -bOffset)
-      ctx.lineTo(-bOffset + bSize, -bOffset)
-      ctx.stroke()
-      // Top-right bracket
-      ctx.beginPath()
-      ctx.moveTo(bOffset - bSize, -bOffset)
-      ctx.lineTo(bOffset, -bOffset)
-      ctx.lineTo(bOffset, -bOffset + bSize)
-      ctx.stroke()
-      // Bottom-left bracket
-      ctx.beginPath()
-      ctx.moveTo(-bOffset, bOffset - bSize)
-      ctx.lineTo(-bOffset, bOffset)
-      ctx.lineTo(-bOffset + bSize, bOffset)
-      ctx.stroke()
-      // Bottom-right bracket
-      ctx.beginPath()
-      ctx.moveTo(bOffset - bSize, bOffset)
-      ctx.lineTo(bOffset, bOffset)
-      ctx.lineTo(bOffset, bOffset - bSize)
+      ctx.moveTo(-o, -o + b); ctx.lineTo(-o, -o); ctx.lineTo(-o + b, -o)
+      ctx.moveTo(o - b, -o); ctx.lineTo(o, -o); ctx.lineTo(o, -o + b)
+      ctx.moveTo(-o, o - b); ctx.lineTo(-o, o); ctx.lineTo(-o + b, o)
+      ctx.moveTo(o - b, o); ctx.lineTo(o, o); ctx.lineTo(o, o - b)
       ctx.stroke()
 
       ctx.restore()
@@ -237,11 +244,11 @@ export default function CyberCursor() {
       window.removeEventListener('resize', resize)
       window.removeEventListener('mousemove', onMouseMove)
       window.removeEventListener('click', onClick, true)
-      cancelAnimationFrame(rafId.current)
+      cancelAnimationFrame(rafId)
       document.body.style.cursor = ''
       styleEl.remove()
     }
-  }, [spawnParticle, spawnRing])
+  }, [])
 
   if (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) {
     return null
