@@ -1,27 +1,29 @@
 import { useEffect, useRef } from 'react'
 
-const TRAIL_COUNT = 6
+// Neon crosshair cursor as inline SVG data URI — rendered by the OS, zero lag
+const CURSOR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="3" fill="%23ff6b9d"/><circle cx="16" cy="16" r="5" fill="%23ff6b9d" opacity="0.2"/><line x1="16" y1="2" x2="16" y2="11" stroke="%234d9fff" stroke-width="1.5" opacity="0.85"/><line x1="16" y1="21" x2="16" y2="30" stroke="%234d9fff" stroke-width="1.5" opacity="0.85"/><line x1="2" y1="16" x2="11" y2="16" stroke="%234d9fff" stroke-width="1.5" opacity="0.85"/><line x1="21" y1="16" x2="30" y2="16" stroke="%234d9fff" stroke-width="1.5" opacity="0.85"/><path d="M 6,6 L 6,11" stroke="%234dffb8" stroke-width="1" opacity="0.5"/><path d="M 6,6 L 11,6" stroke="%234dffb8" stroke-width="1" opacity="0.5"/><path d="M 26,6 L 26,11" stroke="%234dffb8" stroke-width="1" opacity="0.5"/><path d="M 26,6 L 21,6" stroke="%234dffb8" stroke-width="1" opacity="0.5"/><path d="M 6,26 L 6,21" stroke="%234dffb8" stroke-width="1" opacity="0.5"/><path d="M 6,26 L 11,26" stroke="%234dffb8" stroke-width="1" opacity="0.5"/><path d="M 26,26 L 26,21" stroke="%234dffb8" stroke-width="1" opacity="0.5"/><path d="M 26,26 L 21,26" stroke="%234dffb8" stroke-width="1" opacity="0.5"/></svg>`
+
+const CURSOR_URL = `url("data:image/svg+xml,${CURSOR_SVG}") 16 16, crosshair`
+
+const TRAIL_COUNT = 5
 
 export default function CyberCursor() {
-  const dotRef = useRef(null)
-  const ringRef = useRef(null)
   const trailRefs = useRef([])
+  const ringRef = useRef(null)
   const ripplesRef = useRef(null)
 
   useEffect(() => {
     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return
 
-    const dot = dotRef.current
     const ring = ringRef.current
     const trails = trailRefs.current
     const ripplesContainer = ripplesRef.current
-    if (!dot || !ring || !ripplesContainer) return
+    if (!ring || !ripplesContainer) return
 
-    // Hide default cursor
-    document.body.style.cursor = 'none'
+    // Set custom cursor image globally — OS-level, zero lag
     const styleEl = document.createElement('style')
     styleEl.textContent = `
-      *, *::before, *::after { cursor: none !important; }
+      *, *::before, *::after { cursor: ${CURSOR_URL} !important; }
     `
     document.head.appendChild(styleEl)
 
@@ -31,15 +33,12 @@ export default function CyberCursor() {
       const x = e.clientX
       const y = e.clientY
 
-      // Core dot — instant, no transition
-      dot.style.transform = `translate(${x}px, ${y}px)`
+      // Ring follows with slight delay
+      ring.style.transform = `translate(${x}px, ${y}px) scale(${hovering ? 1.6 : 1})`
 
-      // Ring — instant position but smooth scale via CSS transition
-      ring.style.transform = `translate(${x}px, ${y}px) scale(${hovering ? 1.8 : 1})`
-
-      // Trail dots — each has increasing CSS transition delay
+      // Trail dots
       for (let i = 0; i < trails.length; i++) {
-        trails[i].style.transform = `translate(${x}px, ${y}px)`
+        if (trails[i]) trails[i].style.transform = `translate(${x}px, ${y}px)`
       }
     }
 
@@ -47,11 +46,8 @@ export default function CyberCursor() {
       const t = e.target
       if (t.matches && t.matches('a, button, [role="button"], input, textarea, select, label, [data-clickable]')) {
         hovering = true
-        ring.style.transform = ring.style.transform.replace(/scale\([^)]+\)/, 'scale(1.8)')
         ring.style.borderColor = '#ff6b9d'
         ring.style.boxShadow = '0 0 15px rgba(255,107,157,0.4), inset 0 0 15px rgba(255,107,157,0.1)'
-        dot.style.opacity = '0.3'
-        dot.style.transform = dot.style.transform // keep position
       }
     }
 
@@ -59,14 +55,12 @@ export default function CyberCursor() {
       const t = e.target
       if (t.matches && t.matches('a, button, [role="button"], input, textarea, select, label, [data-clickable]')) {
         hovering = false
-        ring.style.borderColor = 'rgba(77,159,255,0.5)'
-        ring.style.boxShadow = '0 0 10px rgba(77,159,255,0.3), inset 0 0 10px rgba(77,159,255,0.05)'
-        dot.style.opacity = '1'
+        ring.style.borderColor = 'rgba(196,77,255,0.35)'
+        ring.style.boxShadow = '0 0 10px rgba(196,77,255,0.2), inset 0 0 10px rgba(196,77,255,0.05)'
       }
     }
 
     const onClick = (e) => {
-      // Spawn a CSS-animated ripple
       const ripple = document.createElement('div')
       ripple.style.cssText = `
         position: fixed;
@@ -74,15 +68,20 @@ export default function CyberCursor() {
         width: 40px; height: 40px;
         margin: -20px 0 0 -20px;
         border-radius: 50%;
-        border: 2px solid #c44dff;
+        border: 1.5px solid #c44dff;
         box-shadow: 0 0 12px rgba(196,77,255,0.5);
         pointer-events: none;
-        transform: translate(${e.clientX}px, ${e.clientY}px) scale(0);
-        animation: cyber-ripple 0.6s ease-out forwards;
+        transform: translate(${e.clientX}px, ${e.clientY}px) scale(1);
+        opacity: 1;
         z-index: 99999;
       `
       ripplesContainer.appendChild(ripple)
-      setTimeout(() => ripple.remove(), 650)
+      // Force reflow then animate
+      ripple.offsetWidth
+      ripple.style.transition = 'transform 0.5s ease-out, opacity 0.5s ease-out'
+      ripple.style.transform = `translate(${e.clientX}px, ${e.clientY}px) scale(2.5)`
+      ripple.style.opacity = '0'
+      setTimeout(() => ripple.remove(), 550)
     }
 
     window.addEventListener('mousemove', onMouseMove, { passive: true })
@@ -95,7 +94,6 @@ export default function CyberCursor() {
       document.removeEventListener('mouseover', onMouseOver)
       document.removeEventListener('mouseout', onMouseOut)
       window.removeEventListener('click', onClick, true)
-      document.body.style.cursor = ''
       styleEl.remove()
     }
   }, [])
@@ -106,21 +104,7 @@ export default function CyberCursor() {
 
   return (
     <>
-      <style>{`
-        @keyframes cyber-ripple {
-          0% { transform: translate(var(--x), var(--y)) scale(0); opacity: 1; }
-          100% { transform: translate(var(--x), var(--y)) scale(3); opacity: 0; }
-        }
-        @keyframes cyber-ripple {
-          to { transform: scale(3); opacity: 0; }
-        }
-        @keyframes cursor-pulse {
-          0%, 100% { box-shadow: 0 0 6px rgba(255,107,157,0.8), 0 0 20px rgba(255,107,157,0.3); }
-          50% { box-shadow: 0 0 10px rgba(255,107,157,1), 0 0 30px rgba(255,107,157,0.5); }
-        }
-      `}</style>
-
-      {/* Trail dots — CSS transition creates the trailing effect */}
+      {/* Trail dots — CSS transitions create comet tail */}
       {Array.from({ length: TRAIL_COUNT }, (_, i) => (
         <div
           key={i}
@@ -129,65 +113,44 @@ export default function CyberCursor() {
             position: 'fixed',
             top: 0,
             left: 0,
-            width: `${4 - i * 0.4}px`,
-            height: `${4 - i * 0.4}px`,
-            marginLeft: `${-(4 - i * 0.4) / 2}px`,
-            marginTop: `${-(4 - i * 0.4) / 2}px`,
+            width: `${3 - i * 0.3}px`,
+            height: `${3 - i * 0.3}px`,
+            marginLeft: `${-(3 - i * 0.3) / 2}px`,
+            marginTop: `${-(3 - i * 0.3) / 2}px`,
             borderRadius: '50%',
-            backgroundColor: TRAIL_COUNT - i <= 2 ? '#4dffb8' : i <= 1 ? '#c44dff' : '#4d9fff',
-            opacity: 0.6 - i * 0.08,
+            backgroundColor: i <= 1 ? '#c44dff' : i <= 3 ? '#4d9fff' : '#4dffb8',
+            opacity: 0.5 - i * 0.08,
             pointerEvents: 'none',
-            zIndex: 100000 - i,
+            zIndex: 99998 - i,
             willChange: 'transform',
-            transition: `transform ${0.08 + i * 0.04}s ease-out`,
+            transition: `transform ${0.1 + i * 0.05}s ease-out`,
           }}
         />
       ))}
 
-      {/* Outer ring — smooth scale on hover */}
+      {/* Outer ring */}
       <div
         ref={ringRef}
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '36px',
-          height: '36px',
-          marginLeft: '-18px',
-          marginTop: '-18px',
+          width: '40px',
+          height: '40px',
+          marginLeft: '-20px',
+          marginTop: '-20px',
           borderRadius: '50%',
-          border: '1.5px solid rgba(77,159,255,0.5)',
-          boxShadow: '0 0 10px rgba(77,159,255,0.3), inset 0 0 10px rgba(77,159,255,0.05)',
+          border: '1px solid rgba(196,77,255,0.35)',
+          boxShadow: '0 0 10px rgba(196,77,255,0.2), inset 0 0 10px rgba(196,77,255,0.05)',
           pointerEvents: 'none',
-          zIndex: 99999,
+          zIndex: 99997,
           willChange: 'transform',
-          transition: 'transform 0.12s ease-out, border-color 0.2s, box-shadow 0.2s',
-        }}
-      />
-
-      {/* Core dot — instant, no transition */}
-      <div
-        ref={dotRef}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '6px',
-          height: '6px',
-          marginLeft: '-3px',
-          marginTop: '-3px',
-          borderRadius: '50%',
-          backgroundColor: '#ff6b9d',
-          pointerEvents: 'none',
-          zIndex: 100001,
-          willChange: 'transform',
-          animation: 'cursor-pulse 2s ease-in-out infinite',
-          transition: 'opacity 0.2s',
+          transition: 'transform 0.15s ease-out, border-color 0.2s, box-shadow 0.2s',
         }}
       />
 
       {/* Ripple container */}
-      <div ref={ripplesRef} style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none', zIndex: 99998 }} />
+      <div ref={ripplesRef} style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none', zIndex: 99996 }} />
     </>
   )
 }
