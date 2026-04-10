@@ -15,9 +15,10 @@ export default function CyberCursor() {
     if (!canvas) return
     const ctx = canvas.getContext('2d', { alpha: true })
 
-    // State
+    // State — two layers: crosshair snaps instantly, brackets trail slightly
     const mouse = { x: -100, y: -100 }
     const cursor = { x: -100, y: -100 }
+    const trail = { x: -100, y: -100 }
     let particleCount = 0
     const particlesX = new Float32Array(MAX_PARTICLES)
     const particlesY = new Float32Array(MAX_PARTICLES)
@@ -93,9 +94,12 @@ export default function CyberCursor() {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       frame++
 
-      // Cursor follows mouse directly — no lag
-      cursor.x += (mouse.x - cursor.x) * 0.45
-      cursor.y += (mouse.y - cursor.y) * 0.45
+      // Crosshair snaps to mouse instantly
+      cursor.x = mouse.x
+      cursor.y = mouse.y
+      // Brackets trail behind for cinematic feel
+      trail.x += (mouse.x - trail.x) * 0.25
+      trail.y += (mouse.y - trail.y) * 0.25
 
       // Spawn particles based on movement distance (not every mousemove)
       const dx = mouse.x - cursor.x
@@ -177,26 +181,13 @@ export default function CyberCursor() {
       ringCount = writeIdx
       ctx.shadowBlur = 0
 
-      // --- Crosshair ---
-      const cx = cursor.x
-      const cy = cursor.y
+      // --- Crosshair (instant position) ---
       const size = 18
       const gap = 6
       const rot = frame * 0.02
 
       ctx.save()
-      ctx.translate(cx, cy)
-
-      // Outer arcs
-      ctx.globalAlpha = 0.3
-      ctx.strokeStyle = '#c44dff'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.arc(0, 0, size + 4, rot, rot + Math.PI * 1.2)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.arc(0, 0, size + 4, rot + Math.PI, rot + Math.PI * 2.2)
-      ctx.stroke()
+      ctx.translate(cursor.x, cursor.y)
 
       // Crosshair lines
       ctx.globalAlpha = 0.85
@@ -219,6 +210,23 @@ export default function CyberCursor() {
       ctx.beginPath()
       ctx.arc(0, 0, 8, 0, Math.PI * 2)
       ctx.fill()
+
+      ctx.restore()
+
+      // --- Outer brackets & arcs (trailing position — cinematic lag) ---
+      ctx.save()
+      ctx.translate(trail.x, trail.y)
+
+      // Outer arcs
+      ctx.globalAlpha = 0.3
+      ctx.strokeStyle = '#c44dff'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.arc(0, 0, size + 4, rot, rot + Math.PI * 1.2)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(0, 0, size + 4, rot + Math.PI, rot + Math.PI * 2.2)
+      ctx.stroke()
 
       // Corner brackets
       ctx.globalAlpha = 0.5
