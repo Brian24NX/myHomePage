@@ -1,178 +1,100 @@
 import { useEffect, useRef } from 'react'
 
-const COLORS = ['#ff6b9d', '#c44dff', '#4d9fff', '#4dffb8', '#ffd84d']
-const MAX_PARTICLES = 60
-const MAX_RINGS = 5
+const TRAIL_COUNT = 6
 
 export default function CyberCursor() {
-  const crosshairRef = useRef(null)
-  const bracketRef = useRef(null)
-  const canvasRef = useRef(null)
+  const dotRef = useRef(null)
+  const ringRef = useRef(null)
+  const trailRefs = useRef([])
+  const ripplesRef = useRef(null)
 
   useEffect(() => {
     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return
 
-    const crosshair = crosshairRef.current
-    const bracket = bracketRef.current
-    const canvas = canvasRef.current
-    if (!crosshair || !bracket || !canvas) return
-    const ctx = canvas.getContext('2d', { alpha: true })
-
-    const mouse = { x: -100, y: -100 }
-    const trail = { x: -100, y: -100 }
-    let particleCount = 0
-    const pX = new Float32Array(MAX_PARTICLES)
-    const pY = new Float32Array(MAX_PARTICLES)
-    const pVX = new Float32Array(MAX_PARTICLES)
-    const pVY = new Float32Array(MAX_PARTICLES)
-    const pLife = new Float32Array(MAX_PARTICLES)
-    const pDecay = new Float32Array(MAX_PARTICLES)
-    const pSize = new Float32Array(MAX_PARTICLES)
-    const pColor = new Uint8Array(MAX_PARTICLES)
-
-    let ringCount = 0
-    const rX = new Float32Array(MAX_RINGS)
-    const rY = new Float32Array(MAX_RINGS)
-    const rRadius = new Float32Array(MAX_RINGS)
-    const rLife = new Float32Array(MAX_RINGS)
-
-    let frame = 0
-    let rafId
-    let prevX = -100, prevY = -100
-
-    const resize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
-    resize()
-    window.addEventListener('resize', resize)
+    const dot = dotRef.current
+    const ring = ringRef.current
+    const trails = trailRefs.current
+    const ripplesContainer = ripplesRef.current
+    if (!dot || !ring || !ripplesContainer) return
 
     // Hide default cursor
     document.body.style.cursor = 'none'
     const styleEl = document.createElement('style')
-    styleEl.textContent = '*, *::before, *::after { cursor: none !important; }'
+    styleEl.textContent = `
+      *, *::before, *::after { cursor: none !important; }
+    `
     document.head.appendChild(styleEl)
 
-    const addParticle = (x, y) => {
-      if (particleCount >= MAX_PARTICLES) return
-      const i = particleCount++
-      const angle = Math.random() * Math.PI * 2
-      const speed = Math.random() * 1.5 + 0.5
-      pX[i] = x; pY[i] = y
-      pVX[i] = Math.cos(angle) * speed
-      pVY[i] = Math.sin(angle) * speed
-      pLife[i] = 1
-      pDecay[i] = Math.random() * 0.025 + 0.02
-      pSize[i] = Math.random() * 2.5 + 1
-      pColor[i] = Math.floor(Math.random() * COLORS.length)
-    }
+    let hovering = false
 
-    const addRing = (x, y) => {
-      if (ringCount >= MAX_RINGS) return
-      const i = ringCount++
-      rX[i] = x; rY[i] = y; rRadius[i] = 5; rLife[i] = 1
-    }
-
-    // DOM crosshair moves instantly via mousemove — no RAF delay
     const onMouseMove = (e) => {
-      mouse.x = e.clientX
-      mouse.y = e.clientY
-      crosshair.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
+      const x = e.clientX
+      const y = e.clientY
+
+      // Core dot — instant, no transition
+      dot.style.transform = `translate(${x}px, ${y}px)`
+
+      // Ring — instant position but smooth scale via CSS transition
+      ring.style.transform = `translate(${x}px, ${y}px) scale(${hovering ? 1.8 : 1})`
+
+      // Trail dots — each has increasing CSS transition delay
+      for (let i = 0; i < trails.length; i++) {
+        trails[i].style.transform = `translate(${x}px, ${y}px)`
+      }
+    }
+
+    const onMouseOver = (e) => {
+      const t = e.target
+      if (t.matches && t.matches('a, button, [role="button"], input, textarea, select, label, [data-clickable]')) {
+        hovering = true
+        ring.style.transform = ring.style.transform.replace(/scale\([^)]+\)/, 'scale(1.8)')
+        ring.style.borderColor = '#ff6b9d'
+        ring.style.boxShadow = '0 0 15px rgba(255,107,157,0.4), inset 0 0 15px rgba(255,107,157,0.1)'
+        dot.style.opacity = '0.3'
+        dot.style.transform = dot.style.transform // keep position
+      }
+    }
+
+    const onMouseOut = (e) => {
+      const t = e.target
+      if (t.matches && t.matches('a, button, [role="button"], input, textarea, select, label, [data-clickable]')) {
+        hovering = false
+        ring.style.borderColor = 'rgba(77,159,255,0.5)'
+        ring.style.boxShadow = '0 0 10px rgba(77,159,255,0.3), inset 0 0 10px rgba(77,159,255,0.05)'
+        dot.style.opacity = '1'
+      }
     }
 
     const onClick = (e) => {
-      addRing(e.clientX, e.clientY)
-      for (let i = 0; i < 10; i++) addParticle(e.clientX, e.clientY)
+      // Spawn a CSS-animated ripple
+      const ripple = document.createElement('div')
+      ripple.style.cssText = `
+        position: fixed;
+        top: 0; left: 0;
+        width: 40px; height: 40px;
+        margin: -20px 0 0 -20px;
+        border-radius: 50%;
+        border: 2px solid #c44dff;
+        box-shadow: 0 0 12px rgba(196,77,255,0.5);
+        pointer-events: none;
+        transform: translate(${e.clientX}px, ${e.clientY}px) scale(0);
+        animation: cyber-ripple 0.6s ease-out forwards;
+        z-index: 99999;
+      `
+      ripplesContainer.appendChild(ripple)
+      setTimeout(() => ripple.remove(), 650)
     }
 
     window.addEventListener('mousemove', onMouseMove, { passive: true })
+    document.addEventListener('mouseover', onMouseOver, { passive: true })
+    document.addEventListener('mouseout', onMouseOut, { passive: true })
     window.addEventListener('click', onClick, true)
 
-    const loop = () => {
-      rafId = requestAnimationFrame(loop)
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      frame++
-
-      // Trailing bracket follows with delay
-      trail.x += (mouse.x - trail.x) * 0.2
-      trail.y += (mouse.y - trail.y) * 0.2
-      bracket.style.transform = `translate(${trail.x}px, ${trail.y}px) rotate(${frame * 0.6}deg)`
-
-      // Spawn particles based on distance moved
-      const dx = mouse.x - prevX
-      const dy = mouse.y - prevY
-      const dist = Math.sqrt(dx * dx + dy * dy)
-      if (dist > 4) {
-        const count = Math.min(Math.floor(dist / 8), 3)
-        for (let i = 0; i < count; i++) {
-          addParticle(
-            mouse.x + (Math.random() - 0.5) * 4,
-            mouse.y + (Math.random() - 0.5) * 4
-          )
-        }
-        prevX = mouse.x
-        prevY = mouse.y
-      }
-
-      // --- Particles ---
-      let w = 0
-      for (let i = 0; i < particleCount; i++) {
-        pX[i] += pVX[i]; pY[i] += pVY[i]
-        pLife[i] -= pDecay[i]
-        if (pLife[i] <= 0) continue
-        if (w !== i) {
-          pX[w]=pX[i]; pY[w]=pY[i]; pVX[w]=pVX[i]; pVY[w]=pVY[i]
-          pLife[w]=pLife[i]; pDecay[w]=pDecay[i]; pSize[w]=pSize[i]; pColor[w]=pColor[i]
-        }
-        const life = pLife[w], rad = pSize[w] * life
-        ctx.globalAlpha = life * 0.7
-        ctx.fillStyle = COLORS[pColor[w]]
-        ctx.beginPath()
-        ctx.arc(pX[w], pY[w], rad, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.globalAlpha = life * 0.15
-        ctx.beginPath()
-        ctx.arc(pX[w], pY[w], rad * 3, 0, Math.PI * 2)
-        ctx.fill()
-        w++
-      }
-      particleCount = w
-
-      // --- Rings ---
-      w = 0
-      for (let i = 0; i < ringCount; i++) {
-        rRadius[i] += 3.5; rLife[i] -= 0.03
-        if (rLife[i] <= 0) continue
-        if (w !== i) { rX[w]=rX[i]; rY[w]=rY[i]; rRadius[w]=rRadius[i]; rLife[w]=rLife[i] }
-        const life = rLife[w]
-        ctx.globalAlpha = life * 0.5
-        ctx.strokeStyle = '#c44dff'
-        ctx.shadowColor = '#c44dff'
-        ctx.shadowBlur = 10
-        ctx.lineWidth = 2 * life
-        ctx.beginPath()
-        ctx.arc(rX[w], rY[w], rRadius[w], 0, Math.PI * 2)
-        ctx.stroke()
-        ctx.strokeStyle = '#4d9fff'
-        ctx.shadowColor = '#4d9fff'
-        ctx.lineWidth = 1 * life
-        ctx.beginPath()
-        ctx.arc(rX[w], rY[w], rRadius[w] * 0.6, 0, Math.PI * 2)
-        ctx.stroke()
-        w++
-      }
-      ringCount = w
-      ctx.shadowBlur = 0
-      ctx.globalAlpha = 1
-    }
-
-    loop()
-
     return () => {
-      window.removeEventListener('resize', resize)
       window.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseover', onMouseOver)
+      document.removeEventListener('mouseout', onMouseOut)
       window.removeEventListener('click', onClick, true)
-      cancelAnimationFrame(rafId)
       document.body.style.cursor = ''
       styleEl.remove()
     }
@@ -184,67 +106,88 @@ export default function CyberCursor() {
 
   return (
     <>
-      {/* DOM crosshair — GPU composited, moves at native speed */}
-      <div
-        ref={crosshairRef}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          pointerEvents: 'none',
-          zIndex: 100000,
-          willChange: 'transform',
-        }}
-      >
-        <svg width="40" height="40" viewBox="-20 -20 40 40" style={{ display: 'block', margin: '-20px 0 0 -20px', filter: 'drop-shadow(0 0 4px rgba(77,159,255,0.6))' }}>
-          {/* Crosshair lines */}
-          <line x1="0" y1="-18" x2="0" y2="-6" stroke="#4d9fff" strokeWidth="1.5" opacity="0.85" />
-          <line x1="0" y1="6" x2="0" y2="18" stroke="#4d9fff" strokeWidth="1.5" opacity="0.85" />
-          <line x1="-18" y1="0" x2="-6" y2="0" stroke="#4d9fff" strokeWidth="1.5" opacity="0.85" />
-          <line x1="6" y1="0" x2="18" y2="0" stroke="#4d9fff" strokeWidth="1.5" opacity="0.85" />
-          {/* Center dot */}
-          <circle cx="0" cy="0" r="2.5" fill="#ff6b9d" />
-          <circle cx="0" cy="0" r="6" fill="#ff6b9d" opacity="0.15" />
-        </svg>
-      </div>
+      <style>{`
+        @keyframes cyber-ripple {
+          0% { transform: translate(var(--x), var(--y)) scale(0); opacity: 1; }
+          100% { transform: translate(var(--x), var(--y)) scale(3); opacity: 0; }
+        }
+        @keyframes cyber-ripple {
+          to { transform: scale(3); opacity: 0; }
+        }
+        @keyframes cursor-pulse {
+          0%, 100% { box-shadow: 0 0 6px rgba(255,107,157,0.8), 0 0 20px rgba(255,107,157,0.3); }
+          50% { box-shadow: 0 0 10px rgba(255,107,157,1), 0 0 30px rgba(255,107,157,0.5); }
+        }
+      `}</style>
 
-      {/* Trailing brackets — follows with delay */}
+      {/* Trail dots — CSS transition creates the trailing effect */}
+      {Array.from({ length: TRAIL_COUNT }, (_, i) => (
+        <div
+          key={i}
+          ref={(el) => { trailRefs.current[i] = el }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: `${4 - i * 0.4}px`,
+            height: `${4 - i * 0.4}px`,
+            marginLeft: `${-(4 - i * 0.4) / 2}px`,
+            marginTop: `${-(4 - i * 0.4) / 2}px`,
+            borderRadius: '50%',
+            backgroundColor: TRAIL_COUNT - i <= 2 ? '#4dffb8' : i <= 1 ? '#c44dff' : '#4d9fff',
+            opacity: 0.6 - i * 0.08,
+            pointerEvents: 'none',
+            zIndex: 100000 - i,
+            willChange: 'transform',
+            transition: `transform ${0.08 + i * 0.04}s ease-out`,
+          }}
+        />
+      ))}
+
+      {/* Outer ring — smooth scale on hover */}
       <div
-        ref={bracketRef}
+        ref={ringRef}
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
+          width: '36px',
+          height: '36px',
+          marginLeft: '-18px',
+          marginTop: '-18px',
+          borderRadius: '50%',
+          border: '1.5px solid rgba(77,159,255,0.5)',
+          boxShadow: '0 0 10px rgba(77,159,255,0.3), inset 0 0 10px rgba(77,159,255,0.05)',
           pointerEvents: 'none',
           zIndex: 99999,
           willChange: 'transform',
+          transition: 'transform 0.12s ease-out, border-color 0.2s, box-shadow 0.2s',
         }}
-      >
-        <svg width="48" height="48" viewBox="-24 -24 48 48" style={{ display: 'block', margin: '-24px 0 0 -24px', filter: 'drop-shadow(0 0 3px rgba(77,255,184,0.4))' }}>
-          {/* Outer arcs */}
-          <path d="M 0,-22 A 22,22 0 0,1 19.05,-11" fill="none" stroke="#c44dff" strokeWidth="1" opacity="0.3" />
-          <path d="M 0,22 A 22,22 0 0,1 -19.05,11" fill="none" stroke="#c44dff" strokeWidth="1" opacity="0.3" />
-          {/* Corner brackets */}
-          <polyline points="-16,-10 -16,-16 -10,-16" fill="none" stroke="#4dffb8" strokeWidth="1" opacity="0.5" />
-          <polyline points="10,-16 16,-16 16,-10" fill="none" stroke="#4dffb8" strokeWidth="1" opacity="0.5" />
-          <polyline points="-16,10 -16,16 -10,16" fill="none" stroke="#4dffb8" strokeWidth="1" opacity="0.5" />
-          <polyline points="10,16 16,16 16,10" fill="none" stroke="#4dffb8" strokeWidth="1" opacity="0.5" />
-        </svg>
-      </div>
+      />
 
-      {/* Canvas only for particles & click rings */}
-      <canvas
-        ref={canvasRef}
+      {/* Core dot — instant, no transition */}
+      <div
+        ref={dotRef}
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '100vw',
-          height: '100vh',
+          width: '6px',
+          height: '6px',
+          marginLeft: '-3px',
+          marginTop: '-3px',
+          borderRadius: '50%',
+          backgroundColor: '#ff6b9d',
           pointerEvents: 'none',
-          zIndex: 99998,
+          zIndex: 100001,
+          willChange: 'transform',
+          animation: 'cursor-pulse 2s ease-in-out infinite',
+          transition: 'opacity 0.2s',
         }}
       />
+
+      {/* Ripple container */}
+      <div ref={ripplesRef} style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none', zIndex: 99998 }} />
     </>
   )
 }
