@@ -52,10 +52,10 @@ const experiences = [
   },
   {
     type: 'research',
-    title: 'Research Member — Att-CapsViT for Chinese Character Recognition',
+    title: 'Research Member — Att-CapsViT for Handwritten Chinese Character Recognition',
     org: 'Chinese Academy of Sciences',
     period: 'Mar 2024 - Jun 2024',
-    description: 'Proposed the Att-CapsViT model integrating Capsule Networks, Vision Transformers, and attention mechanisms for handwritten Chinese character recognition. Published at IEEE AIPMV 2024.',
+    description: 'Proposed Att-CapsViT, a hybrid of Capsule Networks, Vision Transformers, and attention for multi-level (local-to-global) feature extraction in handwritten Chinese character recognition. Ran controlled experiments on MNIST, TAL-OCR-CHN, and SCUT-EPT with ablations isolating each component, evaluated by character error rate. Supervised research, Chinese Academy of Sciences; published in Proc. IEEE AIPMV 2024.',
     skills: ['CapsNets', 'Vision Transformers', 'PyTorch', 'Deep Learning'],
   },
   {
@@ -68,10 +68,10 @@ const experiences = [
   },
   {
     type: 'research',
-    title: 'Research Assistant — CNN vs VGG16 for Image Classification',
+    title: 'Research Assistant — CNNs vs. Pre-trained VGG16 for Image Classification',
     org: 'Harvard University',
     period: 'Aug 2023 - Nov 2023',
-    description: 'Conducted a comparative study of CNN and pre-trained VGG16 architectures under Dr. Pavlos Protopapas. VGG16 achieved 87% accuracy, exceeding CNN by 10%. Published at SPIE ICPPOE 2023.',
+    description: 'Benchmarked a custom CNN against transfer learning with pre-trained VGG16 on the 6-class Intel Image Classification dataset, analyzing accuracy, generalization, and per-class errors; VGG16 reached 87% accuracy, about 10% above the CNN baseline. Supervised research with Dr. Pavlos Protopapas, Harvard University; published in Proc. SPIE 13075 (ICPPOE 2023).',
     skills: ['CNN', 'VGG16', 'Image Classification', 'Python'],
   },
   {
