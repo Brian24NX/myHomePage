@@ -220,7 +220,7 @@ function Resume() {
 
           {/* Quick highlights */}
           <div className="resume-highlights">
-            {['3+ Years Experience', 'Full-Stack Development', 'Cloud & DevOps'].map((item, i) => (
+            {['2 Publications', '5 Research Projects in 2026', '3+ Years in Industry'].map((item, i) => (
               <motion.span
                 key={item}
                 className="resume-highlight-tag"

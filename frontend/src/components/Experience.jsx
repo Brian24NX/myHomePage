@@ -60,7 +60,7 @@ const experiences = [
   },
   {
     type: 'work',
-    title: 'Software Developer Engineer',
+    title: 'Software Development Engineer',
     org: 'iSoftStone',
     period: 'Jan 2023 - Jun 2024',
     description: 'Built cross-platform front-end features using JavaScript/TypeScript and Vue.js. Developed data-driven dashboards with real-time monitoring and KPI visualization. Optimized performance via code splitting and lazy-loading.',
@@ -76,7 +76,7 @@ const experiences = [
   },
   {
     type: 'work',
-    title: 'Software Developer Engineer',
+    title: 'Software Development Engineer',
     org: 'Futu Network Technology Co., Ltd',
     period: 'Oct 2020 - Dec 2022',
     description: 'Built and maintained a Vue 2 web app for an AI customer-service bot platform. Integrated REST APIs for core workflows and automated data analysis using Python, SQL, and R, increasing resolution rate from 65% to 75%.',
