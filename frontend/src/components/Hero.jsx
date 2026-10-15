@@ -3,10 +3,10 @@ import { motion } from 'framer-motion'
 import { FiGithub, FiLinkedin, FiMail, FiChevronDown } from 'react-icons/fi'
 
 const roles = [
+  'Computer Vision Researcher',
+  'ML for Scientific Imaging',
+  'Remote Sensing & GeoAI',
   'Software Engineer',
-  'Full-Stack Developer',
-  'Problem Solver',
-  'Open Source Enthusiast',
 ]
 
 function useTypewriter(words, typeSpeed = 80, deleteSpeed = 50, pauseTime = 2000) {
@@ -177,15 +177,15 @@ function ParticleCanvas() {
 // Floating code terminal
 function FloatingTerminal() {
   const lines = [
-    { type: 'comment', text: '// Building something amazing' },
-    { type: 'keyword', text: 'const ', after: 'developer', afterType: 'variable', rest: ' = {' },
+    { type: 'comment', text: '// Research in progress' },
+    { type: 'keyword', text: 'const ', after: 'researcher', afterType: 'variable', rest: ' = {' },
     { type: 'property', text: '  name: ', value: "'Brian'" },
-    { type: 'property', text: '  stack: ', value: "['React', 'Java', 'AWS']" },
-    { type: 'property', text: '  passion: ', value: "'Clean Code'" },
+    { type: 'property', text: '  focus: ', value: "['Vision', 'MRI', 'GeoAI']" },
+    { type: 'property', text: '  method: ', value: "'Robust ML'" },
     { type: 'plain', text: '}' },
     { type: 'empty', text: '' },
-    { type: 'keyword', text: 'developer', afterType: 'method', after: '.build', rest: '(' },
-    { type: 'string', text: "  'incredible things'" },
+    { type: 'keyword', text: 'researcher', afterType: 'method', after: '.explore', rest: '(' },
+    { type: 'string', text: "  'models that generalize'" },
     { type: 'plain', text: ')' },
   ]
 
@@ -325,7 +325,7 @@ function Hero() {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <span className="status-dot" />
-            Available for opportunities
+            Applying to PhD programs · Fall 2027
           </motion.div>
 
           <motion.p
@@ -379,8 +379,9 @@ function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.85 }}
           >
-            I craft beautiful, high-performance web experiences with modern
-            technologies and clean architecture.
+            I build computer-vision and machine-learning systems for real-world
+            imaging data, from infrared wildlife camera traps to lidar and satellite
+            imagery, with a growing focus on medical image analysis.
           </motion.p>
 
           <motion.div
@@ -389,8 +390,8 @@ function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 1 }}
           >
-            <a href="#projects" className="hero-cta hero-cta-primary">
-              <span>View My Work</span>
+            <a href="#experience" className="hero-cta hero-cta-primary">
+              <span>Explore My Research</span>
               <span className="cta-arrow">→</span>
             </a>
             <a href="#contact" className="hero-cta hero-cta-outline">

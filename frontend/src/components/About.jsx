@@ -2,54 +2,54 @@ import { motion } from 'framer-motion'
 import {
   RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer
 } from 'recharts'
-import { FiTerminal, FiLayers, FiDatabase, FiCloud, FiLayout, FiCpu } from 'react-icons/fi'
+import { FiEye, FiCpu, FiGlobe, FiServer, FiCode, FiLayout } from 'react-icons/fi'
 
 const skillCategories = [
   {
-    icon: <FiLayout />,
-    title: 'Frontend',
-    skills: ['React', 'TypeScript', 'CSS/Sass', 'Vite'],
-    color: '#61dafb',
-  },
-  {
-    icon: <FiTerminal />,
-    title: 'Backend',
-    skills: ['Java', 'Spring Boot', 'Node.js', 'Python'],
-    color: '#68a063',
-  },
-  {
-    icon: <FiDatabase />,
-    title: 'Database',
-    skills: ['PostgreSQL', 'MySQL', 'Redis', 'MongoDB'],
-    color: '#4d9fff',
-  },
-  {
-    icon: <FiCloud />,
-    title: 'DevOps',
-    skills: ['AWS', 'Docker', 'Git', 'CI/CD'],
-    color: '#ff9900',
-  },
-  {
-    icon: <FiCpu />,
-    title: 'AI / ML',
-    skills: ['TensorFlow', 'CNN', 'Data Analysis', 'Jupyter'],
+    icon: <FiEye />,
+    title: 'Computer Vision',
+    skills: ['PyTorch', 'OpenCV', 'MegaDetector / YOLO', 'FiftyOne'],
     color: '#c44dff',
   },
   {
-    icon: <FiLayers />,
-    title: 'Tools',
-    skills: ['VS Code', 'Figma', 'Postman', 'Linux'],
+    icon: <FiCpu />,
+    title: 'Machine Learning',
+    skills: ['PyTorch Geometric', 'scikit-learn', 'TensorFlow', 'Hugging Face'],
     color: '#ff6b9d',
+  },
+  {
+    icon: <FiGlobe />,
+    title: 'Geospatial',
+    skills: ['rasterio', 'GeoPandas', 'pyproj', 'Lidar (USGS 3DEP)'],
+    color: '#68a063',
+  },
+  {
+    icon: <FiServer />,
+    title: 'Research Computing',
+    skills: ['SLURM / HPC', 'Weights & Biases', 'Docker', 'Linux'],
+    color: '#ff9900',
+  },
+  {
+    icon: <FiCode />,
+    title: 'Systems',
+    skills: ['Python', 'C++', 'TorchScript / libtorch', 'Java'],
+    color: '#4d9fff',
+  },
+  {
+    icon: <FiLayout />,
+    title: 'Web',
+    skills: ['React', 'TypeScript', 'Next.js', 'Spring Boot'],
+    color: '#61dafb',
   },
 ]
 
 const radarData = [
-  { skill: 'Frontend', level: 90 },
-  { skill: 'Backend', level: 85 },
-  { skill: 'Database', level: 80 },
-  { skill: 'DevOps', level: 70 },
-  { skill: 'AI / ML', level: 75 },
-  { skill: 'Tools', level: 85 },
+  { skill: 'Vision', level: 85 },
+  { skill: 'ML', level: 85 },
+  { skill: 'Geospatial', level: 70 },
+  { skill: 'HPC', level: 80 },
+  { skill: 'Systems', level: 75 },
+  { skill: 'Web', level: 90 },
 ]
 
 function About() {
@@ -90,15 +90,21 @@ function About() {
               transition={{ duration: 0.6 }}
             >
               <p>
-                I'm a passionate Software Engineer with a love for crafting clean,
-                efficient, and user-friendly applications. From full-stack web development
-                to machine learning projects, I enjoy solving complex problems and
-                turning ideas into reality through code.
+                I'm a master's student at Washington University in St. Louis working on
+                computer vision and machine learning for real-world imaging and sensing data.
+                In 2026 I've worked with four WashU research groups: an AI pipeline for
+                infrared camera-trap video of Congo Basin wildlife (Sanz Lab), predicting
+                hiking speed in unseen regions from lidar and GPS traces (Multimodal Vision
+                Research Laboratory), time-series foundation models in an NIH-funded study of
+                glucose and cognition, and graph neural networks for a gamma-ray telescope.
               </p>
               <p>
-                With experience across multiple domains including web applications,
-                data analysis, and cloud infrastructure, I bring a versatile skill set
-                to every project I work on.
+                The thread through all of it is robustness: models built under one set of
+                conditions (daylight images, familiar regions, one instrument) that have to
+                work under another, judged by rigorous, leakage-free evaluation, including
+                honest negative results. Next, I want to bring this to medical image analysis,
+                especially MRI, as a PhD student. Before research, I spent nearly four years
+                as a software engineer building production web applications.
               </p>
             </motion.div>
 
