@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import {
   RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer
 } from 'recharts'
-import { FiEye, FiCpu, FiGlobe, FiServer, FiCode, FiLayout } from 'react-icons/fi'
+import { FiEye, FiCpu, FiGlobe, FiCompass, FiServer, FiCode } from 'react-icons/fi'
 
 const skillCategories = [
   {
@@ -24,6 +24,12 @@ const skillCategories = [
     color: '#68a063',
   },
   {
+    icon: <FiCompass />,
+    title: 'Robotics',
+    skills: ['World Models (RL)', 'EKF / State Estimation', 'COLMAP / SfM', 'Visual Localization'],
+    color: '#4d9fff',
+  },
+  {
     icon: <FiServer />,
     title: 'Research Computing',
     skills: ['SLURM / HPC', 'Weights & Biases', 'Docker', 'Linux'],
@@ -31,14 +37,8 @@ const skillCategories = [
   },
   {
     icon: <FiCode />,
-    title: 'Systems',
-    skills: ['Python', 'C++', 'TorchScript / libtorch', 'Java'],
-    color: '#4d9fff',
-  },
-  {
-    icon: <FiLayout />,
-    title: 'Web',
-    skills: ['React', 'TypeScript', 'Next.js', 'Spring Boot'],
+    title: 'Software',
+    skills: ['Python', 'C++ / libtorch', 'React / TypeScript', 'Java / Spring Boot'],
     color: '#61dafb',
   },
 ]
@@ -47,9 +47,9 @@ const radarData = [
   { skill: 'Vision', level: 85 },
   { skill: 'ML', level: 85 },
   { skill: 'Geospatial', level: 70 },
+  { skill: 'Robotics', level: 60 },
   { skill: 'HPC', level: 80 },
-  { skill: 'Systems', level: 75 },
-  { skill: 'Web', level: 90 },
+  { skill: 'Software', level: 90 },
 ]
 
 function About() {
@@ -102,9 +102,16 @@ function About() {
                 The thread through all of it is robustness: models built under one set of
                 conditions (daylight images, familiar regions, one instrument) that have to
                 work under another, judged by rigorous, leakage-free evaluation, including
-                honest negative results. Next, I want to bring this to medical image analysis,
-                especially MRI, as a PhD student. Before research, I spent nearly four years
-                as a software engineer building production web applications.
+                honest negative results.
+              </p>
+              <p>
+                As a PhD student, I want to carry this into medical image analysis, remote
+                sensing, and embodied AI &amp; robotics, where models constantly meet new
+                scanners, new regions, and new environments. I've started on the robotics
+                side: diagnosing a world-model agent for drone navigation and prototyping
+                visual localization for WashU's underwater robotics team. Before research, I
+                spent nearly four years as a software engineer building production web
+                applications.
               </p>
             </motion.div>
 

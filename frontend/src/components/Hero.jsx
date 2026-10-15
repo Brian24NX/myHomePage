@@ -4,8 +4,9 @@ import { FiGithub, FiLinkedin, FiMail, FiChevronDown } from 'react-icons/fi'
 
 const roles = [
   'Computer Vision Researcher',
-  'ML for Scientific Imaging',
+  'Medical Image Analysis',
   'Remote Sensing & GeoAI',
+  'Embodied AI & Robotics',
   'Software Engineer',
 ]
 
@@ -180,7 +181,7 @@ function FloatingTerminal() {
     { type: 'comment', text: '// Research in progress' },
     { type: 'keyword', text: 'const ', after: 'researcher', afterType: 'variable', rest: ' = {' },
     { type: 'property', text: '  name: ', value: "'Brian'" },
-    { type: 'property', text: '  focus: ', value: "['Vision', 'MRI', 'GeoAI']" },
+    { type: 'property', text: '  focus: ', value: "['MRI', 'GeoAI', 'Robotics']" },
     { type: 'property', text: '  method: ', value: "'Robust ML'" },
     { type: 'plain', text: '}' },
     { type: 'empty', text: '' },
@@ -380,8 +381,9 @@ function Hero() {
             transition={{ duration: 0.5, delay: 0.85 }}
           >
             I build computer-vision and machine-learning systems for real-world
-            imaging data, from infrared wildlife camera traps to lidar and satellite
-            imagery, with a growing focus on medical image analysis.
+            sensing data, from infrared wildlife camera traps to lidar and satellite
+            imagery. I'm interested in medical image analysis, remote sensing, and
+            embodied AI &amp; robotics.
           </motion.p>
 
           <motion.div
